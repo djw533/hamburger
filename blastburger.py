@@ -132,7 +132,6 @@ def __create_blast_db__(fasta_files,blastdb_name,output_dir):
     ### make blastdb
     os.system("makeblastdb -in {dir}/blastdb_input.fasta -dbtype nucl -parse_seqids -out {dir}/{name} -title {name}".format(dir = output_dir, name = blastdb_name))
 
-
 ##############################################################################################################
 
 def __run_blast__(query,blastdb,output_file):
@@ -397,8 +396,6 @@ def __gff_to_gggenes__(input_gffs,output_gggenes,containing_folder):
                 with open(output_gggenes, "a") as output:
                     output.write(str(number)+","+strain+","+gg_start+","+gg_stop+","+gg_gene+","+gg_stran+","+gg_direction+"\n")
                 number +=1
-
-
 
 ################################################################################################
 def reorder_operons(input_genes,output_genes):
