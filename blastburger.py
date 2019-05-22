@@ -66,7 +66,8 @@ def parseArgs():
 
 ##### FUNCTIONS
 
-#########
+##############################################################################################################
+
 def __gff_to_fna__(gff_file,output_fasta,contig_dir):
     ''' contig dir is for the output of the singlefastas'''
 
@@ -121,7 +122,8 @@ def __gff_to_fna__(gff_file,output_fasta,contig_dir):
 
     return contigs
 
-#########
+##############################################################################################################
+
 def __create_blast_db__(fasta_files,blastdb_name,output_dir):
 
     ###concatenate input fasta files
@@ -131,13 +133,15 @@ def __create_blast_db__(fasta_files,blastdb_name,output_dir):
     os.system("makeblastdb -in {dir}/blastdb_input.fasta -dbtype nucl -parse_seqids -out {dir}/{name} -title {name}".format(dir = output_dir, name = blastdb_name))
 
 
-#########
+##############################################################################################################
+
 def __run_blast__(query,blastdb,output_file):
 
     ### run blast
     os.system("blastn -task megablast -query {query} -db {blastdb} -outfmt 6 -out {output}".format(query = query, blastdb = blastdb, output = output_file))
 
-#########
+##############################################################################################################
+
 def __filter_blast__(blast_results,perc_id,query_cover,query):
 
     ### get length of query:
@@ -170,7 +174,8 @@ def __filter_blast__(blast_results,perc_id,query_cover,query):
 
     return filtered_blast_results
 
-#########
+##############################################################################################################
+
 def __check_blast_hits__(blast_results, contigs, permitted_number):
     '''Checking only one blast hit in each strain gff file
     Contig input is a dictionary with each key being the
@@ -212,7 +217,7 @@ def __check_blast_hits__(blast_results, contigs, permitted_number):
 
     return over_permitted, over_limit
 
-############
+##############################################################################################################
 
 def __get_start_and_stop_from_blast_hits__(blast_results, contigs):
 
@@ -238,7 +243,7 @@ def __get_start_and_stop_from_blast_hits__(blast_results, contigs):
     ###return dictionary:
     return start_and_stop
 
-###############
+##############################################################################################################
 
 def extract_a2b(start_index, stop_index, gff_input, strain, T6SS_number, contig, upstream, downstream, singlefastas_dir, output_dir):
     """ Take sequence and annotation from gff3 files between genomic point A and B, given both base indices """
@@ -361,8 +366,6 @@ def __gff_to_gggenes__(input_gffs,output_gggenes,containing_folder):
 
             if line.startswith('##FASTA'):
         		fasta = True
-            if line.startswith('##FASTA'):
-            	fasta = True
             if line.startswith('#'):
             	continue
 
