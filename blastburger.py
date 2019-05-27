@@ -524,8 +524,8 @@ def main():
     # print contigs
 
     #### 2. create blastdb
-
-    __create_blast_db__(fasta_files,"blast_burger_db",args.output)
+    if args.blastdb == None:
+        __create_blast_db__(fasta_files,"blast_burger_db",args.output)
 
     #### 3. run blast
 
