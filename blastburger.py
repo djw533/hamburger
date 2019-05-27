@@ -160,7 +160,7 @@ def __run_blast__(query,blastdb,output_file):
 
 ##############################################################################################################
 
-def __filter_blast__(blast_results,perc_id,query_cover,query):
+def __filter_blast__(blast_results,perc_id,query_cover,query,filtered_output):
 
     ### get length of query:
     FastaFile = open(query, 'rU')
@@ -193,6 +193,10 @@ def __filter_blast__(blast_results,perc_id,query_cover,query):
     print 'query is {query}'.format(query = query)
     for line in filtered_blast_results:
         print line
+
+    with open(filtered_output,"a") as output:
+        for line in filtered_blast_results:
+            output.write(line)
 
     return filtered_blast_results
 
@@ -530,7 +534,7 @@ def main():
 
         #### 4. Filter blast
 
-        filtered_blast_results = __filter_blast__(args.output+"/single_query_blast_results.tbl", args.perc_id, args.query_cover, args.query)
+        filtered_blast_results = __filter_blast__(args.output+"/single_query_blast_results.tbl", args.perc_id, args.query_cover, args.query, 'single_query_filtered_blast_results')
 
         # for line in filtered_blast_results:
         #     print line
@@ -571,8 +575,8 @@ def main():
 
         #### 4. Filter blast
 
-        start_filtered_blast_results = __filter_blast__(args.output+"/start_blast_results.tbl", args.perc_id, args.query_cover, args.start)
-        stop_filtered_blast_results = __filter_blast__(args.output+"/stop_blast_results.tbl", args.perc_id, args.query_cover, args.stop)
+        start_filtered_blast_results = __filter_blast__(args.output+"/start_blast_results.tbl", args.perc_id, args.query_cover, args.start, "start_filtered_blast_results.tbl")
+        stop_filtered_blast_results = __filter_blast__(args.output+"/stop_blast_results.tbl", args.perc_id, args.query_cover, args.stop, "stop_filtered_blast_results.tbl")
 
         # for line in filtered_blast_results:
         #     print line
