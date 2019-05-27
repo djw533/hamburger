@@ -38,7 +38,7 @@ Use either -q or both -s and -e""")
         parser.add_argument('-b',
 			    '--blastdb',
 			    action='store',
-			    help='Blastdb if previously defined - will speed up considerably!')
+			    help='Blastdb if previously defined - will speed up considerably! - only use blast databases created using this script')
         parser.add_argument('-g',
 			    '--gff',
 			    action='store',
@@ -88,6 +88,7 @@ def __gff_to_fna__(gff_file,output_fasta,contig_dir):
     ''' contig dir is for the output of the singlefastas'''
 
     out = open(output_fasta, "w")
+    strain = gff_file.split('.gff')[0]
     contigs = []
     list_of_names = {}
     with open(gff_file) as f:
@@ -95,7 +96,9 @@ def __gff_to_fna__(gff_file,output_fasta,contig_dir):
         for line in f:
             if fasta:
                 if line.startswith('>'):
-                    contigs.append('>'.join(line.strip().split('>')[1:]))
+                    contigs.append('>'.join(line.strip().split('>')[1:])+strain) # slightly roundhouse way of creading unique identifiers for each contig so that there are no duplicate identifiers in the blastdb
+                    out.write(line.strip('\n')+strain+'\n')
+                    continue
                 out.write(line)
                 continue
             if line.startswith("##FASTA"):
@@ -117,7 +120,7 @@ def __gff_to_fna__(gff_file,output_fasta,contig_dir):
         for line in f:
             if fasta:
                 if line.startswith('>'):
-                    current_contig = '>'.join(line.strip().split('>')[1:])
+                    current_contig = '>'.join(line.strip().split('>')[1:])+strain
                 contig_sequences[current_contig].append(line)
                 continue
             if line.startswith("##FASTA"):
@@ -129,7 +132,7 @@ def __gff_to_fna__(gff_file,output_fasta,contig_dir):
     ##### write out contigs
     for contig, sequence in contig_sequences.items():
 
-        out = open(contig_dir+'/'+contig+'.fasta', "w")
+        out = open(contig_dir+'/'+strain.join(contig.split(strain)[:-1])+'.fasta', "w") # messy - but see above for why the contig is named weirdly - to stop duplicate id's in the blastdb
 
         for line in sequence:
             out.write(line)
@@ -501,7 +504,7 @@ def main():
     if args.blastdb:
         blastdb_location = args.blastdb
     else:
-        blastdb_location = blastdb_location
+        blastdb_location = args.output+'/blast_burger_db'
 
 
     #### 1. Get fasta sequences from gff file
@@ -555,7 +558,7 @@ def main():
 
             start = details["start"]
             stop = details["stop"]
-            contig = details["contig"]
+            contig = strain.join(details["contig"].split(strain)[:-1]) # remove strain name from the end of the contig
 
             extract_a2b(start, stop, strain+'.gff', strain, "", contig, args.upstream, args.downstream, args.output+'/'+strain+'/',args.output+'/extracted_gffs_and_sequences/')
 
@@ -624,7 +627,8 @@ def main():
                 print "hits for {strain} are not on the same contig".format(strain = strain)
                 print "Not extracting any operon"
             elif start_contig == stop_contig:
-                extract_a2b(start, stop, strain+'.gff', strain, "", start_contig, args.upstream, args.downstream, args.output+'/'+strain+'/',args.output+'/extracted_gffs_and_sequences/')
+                contig = strain.join(start_contig.split(strain)[:-1])
+                extract_a2b(start, stop, strain+'.gff', strain, "", contig, args.upstream, args.downstream, args.output+'/'+strain+'/',args.output+'/extracted_gffs_and_sequences/')
 
         #####now rejoin the main script at point 8 for both a single query or an end-end query:
 
