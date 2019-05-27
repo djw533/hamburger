@@ -35,6 +35,10 @@ Use either -q or both -s and -e""")
                 action='store',
                 help='Blastn query to search to <use with -s>')
         ### rest of the arguments as normal
+        parser.add_argument('-b',
+			    '--blastdb',
+			    action='store',
+			    help='Blastdb if previously defined - will speed up considerably!')
         parser.add_argument('-g',
 			    '--gff',
 			    action='store',
@@ -493,6 +497,13 @@ def main():
     args.downstream = int(args.downstream)
 
 
+    ## set db :
+    if args.blastdb:
+        blastdb_location = args.blastdb
+    else:
+        blastdb_location = blastdb_location
+
+
     #### 1. Get fasta sequences from gff file
 
     fasta_files = []
@@ -512,7 +523,7 @@ def main():
     #### 3. run blast
 
     if args.query:
-        __run_blast__(args.query,args.output+'/blast_burger_db',args.output+"/single_query_blast_results.tbl")
+        __run_blast__(args.query,blastdb_location,args.output+"/single_query_blast_results.tbl")
 
         #### 4. Filter blast
 
@@ -552,8 +563,8 @@ def main():
     ##### repeat for start and stop - i.e. 2 blast queries:
 
     if args.start and args.stop:
-        __run_blast__(args.start,args.output+'/blast_burger_db',args.output+"/start_blast_results.tbl")
-        __run_blast__(args.stop,args.output+'/blast_burger_db',args.output+"/stop_blast_results.tbl")
+        __run_blast__(args.start,blastdb_location,args.output+"/start_blast_results.tbl")
+        __run_blast__(args.stop,blastdb_location,args.output+"/stop_blast_results.tbl")
 
         #### 4. Filter blast
 
