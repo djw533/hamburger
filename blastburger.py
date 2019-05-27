@@ -17,21 +17,23 @@ def parseArgs():
     try:
         parser = argparse.ArgumentParser(
             formatter_class=argparse.RawDescriptionHelpFormatter ,
-            description="Extract and plot homologous DNA regions with or without an associated phylogeny")
+            description="""Extract and plot homologous DNA regions with or without an associated phylogeny
+Requires and uses blastn to find homologous regions
+Use either -q or both -s and -e""")
         #### make mutually exclusive group
         group = parser.add_mutually_exclusive_group(required=True)
         group.add_argument('-q',
                 '--query',
                 action='store',
-                help='Blastn query to search for')
+                help='Blastn query to search for <use this flag independently of -s and -e>')
         group.add_argument('-s',
                 '--start',
                 action='store',
-                help='Blastn query to search from')
+                help='Blastn query to search from <use with -e>')
         parser.add_argument('-e',
                 '--stop',
                 action='store',
-                help='Blastn query to search to')
+                help='Blastn query to search to <use with -s>')
         ### rest of the arguments as normal
         parser.add_argument('-g',
 			    '--gff',
@@ -180,6 +182,10 @@ def __filter_blast__(blast_results,perc_id,query_cover,query):
 
         if hit_perc_id >= perc_id and hit_query_cover >= query_cover:# only return blast hits that fit the criteria
             filtered_blast_results.append(line.strip())
+
+    print 'query is {query}'.format(query = query)
+    for line in filtered_blast_results:
+        print line
 
     return filtered_blast_results
 
@@ -505,40 +511,111 @@ def main():
 
     #### 3. run blast
 
-    __run_blast__(args.query,args.output+'/blast_burger_db',args.output+"/blast_results.tbl")
+    if args.query:
+        __run_blast__(args.query,args.output+'/blast_burger_db',args.output+"/single_query_blast_results.tbl")
 
-    #### 4. Filter blast
+        #### 4. Filter blast
 
-    filtered_blast_results = __filter_blast__(args.output+"/blast_results.tbl", args.perc_id, args.query_cover, args.query)
+        filtered_blast_results = __filter_blast__(args.output+"/single_query_blast_results.tbl", args.perc_id, args.query_cover, args.query)
 
-    # for line in filtered_blast_results:
-    #     print line
+        # for line in filtered_blast_results:
+        #     print line
 
-    #### 5. Check that there is onlt one hit in each genome:
+        #### 5. Check that there is onlt one hit in each genome:
 
-    blast_check  = __check_blast_hits__(filtered_blast_results, contigs, 1)
-    over_permitted = blast_check[0]
-    strains_over_limit = blast_check[1]
-    if over_permitted == True:
-        print '{strains} have more than one hit within the criteria.\nExiting script now.'.format(strains = ','.join(strains_over_limit))
-        sys.exit()
+        blast_check  = __check_blast_hits__(filtered_blast_results, contigs, 1)
+        over_permitted = blast_check[0]
+        strains_over_limit = blast_check[1]
+        if over_permitted == True:
+            print '{strains} have more than one hit within the criteria.\nExiting script now.'.format(strains = ','.join(strains_over_limit))
+            sys.exit()
 
 
     #### 6. Get start and stop from the filtered_blast_results
 
-    start_and_stop = __get_start_and_stop_from_blast_hits__(filtered_blast_results, contigs)
+        start_and_stop = __get_start_and_stop_from_blast_hits__(filtered_blast_results, contigs)
+
 
     #### 7. Extract gff from a to b
 
-    os.makedirs(args.output+'/extracted_gffs_and_sequences')
+        os.makedirs(args.output+'/extracted_gffs_and_sequences')
 
-    for strain , details  in start_and_stop.items():
+        for strain , details  in start_and_stop.items():
 
-        start = details["start"]
-        stop = details["stop"]
-        contig = details["contig"]
+            start = details["start"]
+            stop = details["stop"]
+            contig = details["contig"]
 
-        extract_a2b(start, stop, strain+'.gff', strain, "", contig, args.upstream, args.downstream, args.output+'/'+strain+'/',args.output+'/extracted_gffs_and_sequences/')
+            extract_a2b(start, stop, strain+'.gff', strain, "", contig, args.upstream, args.downstream, args.output+'/'+strain+'/',args.output+'/extracted_gffs_and_sequences/')
+
+
+    ##### repeat for start and stop - i.e. 2 blast queries:
+
+    if args.start and args.stop:
+        __run_blast__(args.start,args.output+'/blast_burger_db',args.output+"/start_blast_results.tbl")
+        __run_blast__(args.stop,args.output+'/blast_burger_db',args.output+"/stop_blast_results.tbl")
+
+        #### 4. Filter blast
+
+        start_filtered_blast_results = __filter_blast__(args.output+"/start_blast_results.tbl", args.perc_id, args.query_cover, args.start)
+        stop_filtered_blast_results = __filter_blast__(args.output+"/stop_blast_results.tbl", args.perc_id, args.query_cover, args.stop)
+
+        # for line in filtered_blast_results:
+        #     print line
+
+        #### 5. Check that there is onlt one hit in each genome:
+
+        ###for start
+        start_blast_check  = __check_blast_hits__(start_filtered_blast_results, contigs, 1)
+        over_permitted = start_blast_check[0]
+        strains_over_limit = start_blast_check[1]
+        if over_permitted == True:
+            print '{strains} have more than one hit within the criteria.\nExiting script now.'.format(strains = ','.join(strains_over_limit))
+            sys.exit()
+
+        ##for stop
+        stop_blast_check  = __check_blast_hits__(stop_filtered_blast_results, contigs, 1)
+        over_permitted = stop_blast_check[0]
+        strains_over_limit = stop_blast_check[1]
+        if over_permitted == True:
+            print '{strains} have more than one hit within the criteria.\nExiting script now.'.format(strains = ','.join(strains_over_limit))
+            sys.exit()
+
+
+    #### 6. Get start and stop from the filtered_blast_results
+
+        double_queries_dicts = {}
+        double_queries_dicts["start"] = __get_start_and_stop_from_blast_hits__(start_filtered_blast_results, contigs)
+        double_queries_dicts["stop"] = __get_start_and_stop_from_blast_hits__(stop_filtered_blast_results, contigs)
+
+
+    #### 7. Extract gff from a to b
+
+        os.makedirs(args.output+'/extracted_gffs_and_sequences')
+
+        ## check that the same strains are in both dictionaries
+        start_strains = double_queries_dicts["start"].keys()
+        start_strains.sort()
+        stop_strains = double_queries_dicts["stop"].keys()
+        stop_strains.sort()
+
+        if start_strains == stop_strains:
+            print 'strain hit lists are the same'
+
+        for strain in start_strains:# is start or stop - as created above
+            print strain
+            start = double_queries_dicts["start"][strain]["start"] # N.B - was concerned that this wouldn't work - but as long as the queries are selected from the same strand, then the start and stops should result in extracted regions being wholly inclusive of the two fasta queries / blast matches of them
+            stop = double_queries_dicts["stop"][strain]["stop"]
+            #### check that the two hits are on the same contig and only extractgff if this is the case:
+            start_contig = double_queries_dicts["start"][strain]["contig"]
+            stop_contig = double_queries_dicts["start"][strain]["contig"]
+            if start_contig != stop_contig:
+                print "hits for {strain} are not on the same contig".format(strain = strain)
+                print "Not extracting any operon"
+            elif start_contig == stop_contig:
+                extract_a2b(start, stop, strain+'.gff', strain, "", start_contig, args.upstream, args.downstream, args.output+'/'+strain+'/',args.output+'/extracted_gffs_and_sequences/')
+
+        #####now rejoin the main script at point 8 for both a single query or an end-end query:
 
     #### 8. gff to gggenes input
 
@@ -557,7 +634,10 @@ def main():
 
     #### 9. Rscript for the gggenes input alongside the phylogeny - if given
     os.chdir(args.output)
-    os.system("Rscript ~/github/hamburger/blastburger_plots.R {tree}".format(tree = args.tree))
+    if args.tree:
+        os.system("Rscript ~/github/hamburger/blastburger_plots.R {tree}".format(tree = args.tree))
+    else:
+        os.system("Rscript ~/github/hamburger/blastburger_plots_no_tree.R ")
 
     ##ORDER OF FUNCTIONS
     #
