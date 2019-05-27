@@ -18,11 +18,21 @@ def parseArgs():
         parser = argparse.ArgumentParser(
             formatter_class=argparse.RawDescriptionHelpFormatter ,
             description="Extract and plot homologous DNA regions with or without an associated phylogeny")
-        parser.add_argument('-q',
+        #### make mutually exclusive group
+        group = parser.add_mutually_exclusive_group(required=True)
+        group.add_argument('-q',
                 '--query',
                 action='store',
-                required=True,
-                help='Blastn query to search for <required> Set flag')
+                help='Blastn query to search for')
+        group.add_argument('-s',
+                '--start',
+                action='store',
+                help='Blastn query to search from')
+        parser.add_argument('-e',
+                '--stop',
+                action='store',
+                help='Blastn query to search to')
+        ### rest of the arguments as normal
         parser.add_argument('-g',
 			    '--gff',
 			    action='store',
@@ -137,7 +147,7 @@ def __create_blast_db__(fasta_files,blastdb_name,output_dir):
 def __run_blast__(query,blastdb,output_file):
 
     ### run blast
-    os.system("blastn -task megablast -query {query} -db {blastdb} -outfmt 6 -out {output}".format(query = query, blastdb = blastdb, output = output_file))
+    os.system("blastn -task blastn -query {query} -gapopen 0 -gapextend 4 -db {blastdb} -outfmt 6 -out {output}".format(query = query, blastdb = blastdb, output = output_file))
 
 ##############################################################################################################
 
@@ -448,6 +458,26 @@ def main():
 
     args = parseArgs()
     os.makedirs(args.output)
+
+    #### check that either start and stop are set, or that query is set
+
+    if args.query and args.stop != None:
+        print "Can't have -q and -e set simultaneously"
+        print "Exiting script"
+        sys.exit()
+
+    if args.start and args.stop == None:
+        print 'Please provide stop query with -e flag'
+        print "Exiting script"
+        sys.exit()
+
+    # if args.query == False and args.start == False and args.stop == False:
+    #     print 'Need to use fasta query with flag "-q" or start and stop with flags "-s" and "-e" respectively'
+    #     print 'Exiting script'
+    #     sys.exit()
+    #
+    # if args.query != False and args.start
+
 
     ### set perc_id and query_cover as integers
 
