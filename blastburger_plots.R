@@ -31,7 +31,8 @@ t1 <- ggtree(tree, ladderize = T, right = T) +
 
 
 l1 <- ggplot2::ggplot(genes, ggplot2::aes(xmin = start, xmax = end,y = operon, fill = gene)) +
-  geom_gene_arrow() 
+  geom_gene_arrow() +
+  ggsave("gene_plots.svg")
 legend_1 <- cowplot::get_legend(l1)
 
 ggdraw() +
