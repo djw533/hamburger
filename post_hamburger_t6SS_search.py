@@ -83,8 +83,8 @@ def __extract_tssBC_sequences__(directory): # looks for tssBC, finds the closet 
             ##add the gene to this dictionary value
             clusters[cluster][gene].append(id)
 
+
     for cluster, gene in clusters.items():
-        #print(cluster)
         requires_sorting  = False
         if len(gene) < 2: # if there are not both genes for TssB and TssC - then can't analyse this cluster
         #    print("Not the genes required in {cluster}".format(cluster = cluster))
@@ -123,7 +123,6 @@ def __extract_tssBC_sequences__(directory): # looks for tssBC, finds the closet 
                         closest_genes = distance
                         chosen_TssB = tssB_num
                         chosen_TssC = tssC_num
-
 
 
             chosen_TssB = "{prefix}_{num}".format(prefix = prefix, num = chosen_TssB)
@@ -192,7 +191,7 @@ def __extract_tssBC_sequences__(directory): # looks for tssBC, finds the closet 
             ### stop the loop if both tssC and tssB have been found:
 
             if tssB_extracted == True and tssC_extracted == True:
-                continue
+                break # done, can now move to the next cluster
 
 
 def __concatenate_alignments__(aln_1, aln_2, concatenated_output_aln): # must have the same names for this to work
@@ -273,7 +272,7 @@ def main():
 
     #or multiprocess - go through each dir of the hamburger output, and extract a tssB and tssC sequence from each cluster, if they are there
 
-    
+
     pool = multiprocessing.Pool()
 
     result = pool.map(__extract_tssBC_sequences__, list_of_dirs)

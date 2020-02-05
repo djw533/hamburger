@@ -62,7 +62,7 @@ def parseArgs():
         parser.add_argument('-i',
                 '--mandatory',
                 action='store',
-                required=True,
+            #    required=True,
                 help='Mandatory hmm profile input <required> Set flag')
         parser.add_argument('-a',
                 '--accessory',
@@ -104,6 +104,10 @@ def parseArgs():
 			    action='store',
                 default=20,
 			    help='Cutoff HMMER score for each hit, default = 20')
+        parser.add_argument('-t',
+			    '--t6ss',
+			    action='store_true',
+			    help='Automatic searching for T6SSs')
 #        parser.add_argument('-p',
 #			    '--pfam',
 #			    action='store',
@@ -297,6 +301,9 @@ def __multifasta_to_singlefasta__(input_fasta, input_dir, output_dir):
 
     for entry in entries_list:
          name = entry.split('\n')[0]
+         ## going to try to just take the first part to the first break as the output name for the singlefasta.. (if there is more than one):
+         if len(name.split()) > 1:
+             name = name.split()[0]
          with open("{output_dir}/{name}.fna".format(output_dir = output_dir, name = name), "w") as output:
               output.write('>'+entry)
 
@@ -368,8 +375,7 @@ def extract_a2b(start_gene, stop_gene, annotation, strain, cluster_num, upstream
         if gff_line.startswith('#'):
             continue
 
-        id = gff_line.split()[8].split(";")[0].split("=")[1]
-
+        id = gff_line.split("\t")[8].split(";")[0].split("=")[1]
 
         if id == start_gene:
             feature_start = gff_line.split('\t')[3]
@@ -523,10 +529,36 @@ def __search_single_genome__(gff_file):
 
     args = parseArgs()
 
-    mandatory_names = __read_hmms__(args.mandatory)
+    ##### repeat the name changing here....
+    ### if t6ss flag requested then set these using the t6ss default setting
+    if args.t6ss == True:
+        min_genes_num = 8
+        genes_gap_num = 12
+        mandatory_models = "/home/djwilliams/github/hamburger/models/T6SS/T6SS_core.hmm"
+        accessory_models = "/home/djwilliams/github/hamburger/models/T6SS/T6SS_accessory.hmm"
+    elif args.t6ss == False:
+        if args.mandatory == False:
+            print("Need to provide input mandatory hmm profile(s): --mandatory")
+            sys.exit()
+        if args.min_genes == False:
+            print("Need to set the minimum number of hits: --min_genes)")
+            sys.exit()
+        if args.genes_gap == False:
+            print("Need to set the maximum genes gap: --genes_gap)")
+            sys.exit()
+        # now change the variable names from args.xxx
+        min_genes_num = args.min_genes
+        genes_gap_num = args.genes_gap
+        mandatory_models = args.mandatory
+        if args.accessory == True: # if accessory models were given change variable name
+            accessory_models = args.accessory
 
-    if args.accessory:
-        accessory_names = __read_hmms__(args.accessory)
+
+
+    mandatory_names = __read_hmms__(mandatory_models)
+
+    if accessory_models:
+        accessory_names = __read_hmms__(accessory_models)
 
     number_clusters_in_strain = 0
     number_rejected_clusters_in_strain = 0
@@ -567,14 +599,14 @@ def __search_single_genome__(gff_file):
 #5 - Run HMMER and filter according to the cutoff
 #- for both mandatory and accessory
 
-    mandatory_hmmer_tuple = __run_hmmer__(hmmsearch, args.mandatory, prot_seqs, args.cutoff, strain_dir, "mandatory")
+    mandatory_hmmer_tuple = __run_hmmer__(hmmsearch, mandatory_models, prot_seqs, args.cutoff, strain_dir, "mandatory")
     mandatory_hmmer_output = mandatory_hmmer_tuple[0]
     mandatory_hmmer_genes = mandatory_hmmer_tuple[1]
 
 
     ###### then combine the accessory and mandatory results if required.... (think about adding any genes that are not allowed in gene clusters?)
-    if args.accessory:
-        accessory_hmmer_tuple = __run_hmmer__(hmmsearch, args.accessory, prot_seqs, args.cutoff, strain_dir, "accessory")
+    if accessory_models:
+        accessory_hmmer_tuple = __run_hmmer__(hmmsearch, accessory_models, prot_seqs, args.cutoff, strain_dir, "accessory")
         accessory_hmmer_output = accessory_hmmer_tuple[0]
         accessory_hmmer_genes = accessory_hmmer_tuple[1]
 
@@ -591,7 +623,7 @@ def __search_single_genome__(gff_file):
 
 #5 - Cluster the HMMER hits according to the parameters
 
-    filtered_groups = __clustering_func__(total_hmmer_genes,args.genes_gap,args.min_genes)
+    filtered_groups = __clustering_func__(total_hmmer_genes,genes_gap_num,min_genes_num)
 
 #6 - Check that clusters are on the the same contigs
 
@@ -634,7 +666,7 @@ def __search_single_genome__(gff_file):
 
             ### now check for the presence / absence of mandatory / accessory genes:
 
-            if args.accessory: # if accessory was used - remove these hits (if present) from the file:
+            if accessory_models: # if accessory was used - remove these hits (if present) from the file:
 
                 mandatory_in_cluster =  [x for x in group if x not in accessory_hmmer_genes]
 
@@ -649,7 +681,7 @@ def __search_single_genome__(gff_file):
                 accessory_genes_in_cluster = __gene_names_in_cluster__(accessory_in_cluster, accessory_hmmer_output, strain)
 
                 ### cancel the search if the number of unique genes is not less than or equal to the min number set in the search:
-                if len(mandatory_genes_in_cluster) < int(args.min_genes):
+                if len(mandatory_genes_in_cluster) < int(min_genes_num):
                     print("Not enough unique mandatory genes in the cluster found, not reporting gene cluster")
                     number_rejected_clusters_in_strain += 1
 
@@ -663,7 +695,7 @@ def __search_single_genome__(gff_file):
 
                 ## do the same again - are there enough genes:
                 #print(number_query_types)
-                if len(query_types) < int(args.min_genes):
+                if len(query_types) < int(min_genes_num):
                     print("Not enough unique mandatory genes in the cluster found, not reporting gene cluster")
 
                     continue
@@ -727,7 +759,7 @@ def __search_single_genome__(gff_file):
 
         ### first, if using the accessory flag, need to create a new dictionary:
 
-        if args.accessory:
+        if accessory_models:
             all_genes_in_cluster = dict(mandatory_genes_in_cluster)
             all_genes_in_cluster.update(accessory_genes_in_cluster)
 
@@ -768,19 +800,44 @@ def main():
     start = time.time()
     args = parseArgs()
 
-    ### make new output directory first:
+    ### if t6ss flag requested then set these using the t6ss default setting
+    if args.t6ss == True:
+        min_genes_num = 8
+        genes_gap_num = 12
+        mandatory_models = "/home/djwilliams/github/hamburger/models/T6SS/T6SS_core.hmm"
+        accessory_models = "/home/djwilliams/github/hamburger/models/T6SS/T6SS_accessory.hmm"
+    elif args.t6ss == False:
+        if args.mandatory == False:
+            print("Need to provide input mandatory hmm profile(s): --mandatory")
+            sys.exit()
+        if args.min_genes == False:
+            print("Need to set the minimum number of hits: --min_genes)")
+            sys.exit()
+        if args.genes_gap == False:
+            print("Need to set the maximum genes gap: --genes_gap)")
+            sys.exit()
+        # now change the variable names from args.xxx
+        min_genes_num = args.min_genes
+        genes_gap_num = args.genes_gap
+        mandatory_models = args.mandatory
+        if args.accessory == True: # if accessory models were given change variable name
+            accessory_models = args.accessory
 
+
+    ### make new output directory first:
     output_dir = args.output
     os.makedirs(output_dir)
+
+
 ##### steps Required
 
 #1 - Read the HMM queries and get the names of each query
     # - for both mandatory and accessory
 
-    mandatory_names = __read_hmms__(args.mandatory)
+    mandatory_names = __read_hmms__(mandatory_models)
 
-    if args.accessory:
-        accessory_names = __read_hmms__(args.accessory)
+    if accessory_models:
+        accessory_names = __read_hmms__(accessory_models)
 
 
 
@@ -802,7 +859,7 @@ def main():
     \t\t{mandatory_genes}\n\n
     \tAccessory genes:\n
     \t\t{accessory_genes}\n
-    """.format(min_genes=args.min_genes, genes_gap=args.genes_gap, cutoff=args.cutoff, upstream=args.upstream, downstream=args.downstream, mandatory_genes='\n\t\t'.join(mandatory_names), accessory_genes='\n\t\t'.join(accessory_names)))
+    """.format(min_genes=min_genes_num, genes_gap=genes_gap_num, cutoff=args.cutoff, upstream=args.upstream, downstream=args.downstream, mandatory_genes='\n\t\t'.join(mandatory_names), accessory_genes='\n\t\t'.join(accessory_names)))
 
 
 
@@ -822,6 +879,9 @@ def main():
 
 ### cycle through each of the gff files in the provided list of files:
 
+
+
+    # multiprocess
     gff_files = args.gff
 
 
@@ -837,6 +897,10 @@ def main():
 
     print(end-start)
 
+
+    #strain by strain for checking:
+    # for file in args.gff:
+    #     __search_single_genome__(file)
 
 
 #10 Now group all of the different statistics files together
