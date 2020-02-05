@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-
 import traceback, os, math
+
+import os.path
 
 
 from datetime import datetime
@@ -25,11 +26,13 @@ print("Number of processors: ", mp.cpu_count())
 
 #from multiprocessing import Process
 
-# import threading, time
+#import threading, time
 
 ###### modify the path/name for hmmsearch below:
 
 hmmsearch='hmmsearch'
+
+### and for the supplied models for standard pipeline & parameters
 
 
 ###### parse arguments
@@ -198,8 +201,15 @@ def __gff2faa__(gff_file, fasta_file, strain,output_dir):
     return gene_names_altered,list_of_names,genes_and_contig
 
 def __run_hmmer__(hmmsearch_command, hmm_queries, input, hmmer_cutoff, output_dir, name):
-    os.system("{hmmsearch} -o {output_dir}/{name}_log --tblout {output_dir}/{name}_hmmer_scores.tbl {hmm_queries} {input}".format(hmmsearch = hmmsearch_command, hmm_queries = hmm_queries, input = input, output_dir = output_dir, name = name))
     # run hmmer, apply cutoff to only get the results that are wanted, and output the hmmer results
+    os.system("{hmmsearch} -o {output_dir}/{name}_log --tblout {output_dir}/{name}_hmmer_scores.tbl {hmm_queries} {input}".format(hmmsearch = hmmsearch_command, hmm_queries = hmm_queries, input = input, output_dir = output_dir, name = name))
+
+    ## Sometimes this doesn't seem to be working - so if the file doesn't exist - then wait and repeat until it does:
+    while not os.path.exists("{output_dir}/{name}_hmmer_scores.tbl".format(name = name, output_dir = output_dir)):
+        os.system("{hmmsearch} -o {output_dir}/{name}_log --tblout {output_dir}/{name}_hmmer_scores.tbl {hmm_queries} {input}".format(hmmsearch = hmmsearch_command, hmm_queries = hmm_queries, input = input, output_dir = output_dir, name = name))
+
+
+
 
     ### create list for the hmmer output
     hmmer_output = []
@@ -534,8 +544,8 @@ def __search_single_genome__(gff_file):
     if args.t6ss == True:
         min_genes_num = 8
         genes_gap_num = 12
-        mandatory_models = "/home/djwilliams/github/hamburger/models/T6SS/T6SS_core.hmm"
-        accessory_models = "/home/djwilliams/github/hamburger/models/T6SS/T6SS_accessory.hmm"
+        mandatory_models = T6SS_core#"/home/djwilliams/github/hamburger/models/T6SS/T6SS_core.hmm"
+        accessory_models = T6SS_accessory#"/home/djwilliams/github/hamburger/models/T6SS/T6SS_accessory.hmm"
     elif args.t6ss == False:
         if args.mandatory == False:
             print("Need to provide input mandatory hmm profile(s): --mandatory")
@@ -804,8 +814,8 @@ def main():
     if args.t6ss == True:
         min_genes_num = 8
         genes_gap_num = 12
-        mandatory_models = "/home/djwilliams/github/hamburger/models/T6SS/T6SS_core.hmm"
-        accessory_models = "/home/djwilliams/github/hamburger/models/T6SS/T6SS_accessory.hmm"
+        mandatory_models = T6SS_core#"/home/djwilliams/github/hamburger/models/T6SS/T6SS_core.hmm"
+        accessory_models = T6SS_accessory#"/home/djwilliams/github/hamburger/models/T6SS/T6SS_accessory.hmm"
     elif args.t6ss == False:
         if args.mandatory == False:
             print("Need to provide input mandatory hmm profile(s): --mandatory")
