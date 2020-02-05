@@ -476,7 +476,6 @@ def __extract_gggenes_info__(cluster_annotation, named_genes,list_of_genes,start
             old_named_genes[list_of_genes[strain+"_"+str(num)]] = model # create new dict with each gene numebr rin the original annotation having the model assigned to it
 
     #### now go through the list of the cluster annotation and put all into the gggenes csv
-
     gg_number = 0
     gggenes_output = []
 
@@ -491,6 +490,12 @@ def __extract_gggenes_info__(cluster_annotation, named_genes,list_of_genes,start
             gg_stop = str(line.split("\t")[4])
             strand = str(line.split("\t")[6])
             id = line.split("\t")[8].split(';')[0].split("ID=")[1]
+            ## now get the new name assigned by hamburger:
+            for new_name, old_name in list_of_genes.items():    # for name, age in dictionary.iteritems():  (for Python 2.x)
+                if old_name == id:
+                    hamburger_assigned_id = new_name
+                    continue
+
             if id in old_named_genes:
                 model_name = old_named_genes[id] # assigning the model name - if it's there;
             else:
@@ -507,7 +512,7 @@ def __extract_gggenes_info__(cluster_annotation, named_genes,list_of_genes,start
 
 
             #output to a list:
-            gggenes_output.append("{cluster},{number},{start},{end},{gene},{strand},{direction},{strain},{id}".format(cluster = strain+"_cluster_"+cluster_num,number = gg_number, gene = model_name, start = gg_start, end = gg_stop, strand = gg_strand, direction = gg_direction, strain = strain, id = id))
+            gggenes_output.append("{cluster},{number},{start},{end},{gene},{strand},{direction},{strain},{id},{new_name}".format(cluster = strain+"_cluster_"+cluster_num,number = gg_number, gene = model_name, start = gg_start, end = gg_stop, strand = gg_strand, direction = gg_direction, strain = strain, id = id, new_name  = hamburger_assigned_id))
 
 
     ## return the list
@@ -524,6 +529,8 @@ def __search_single_genome__(gff_file):
         accessory_names = __read_hmms__(args.accessory)
 
     number_clusters_in_strain = 0
+    number_rejected_clusters_in_strain = 0
+
 
     output_dir = args.output
 
@@ -644,6 +651,7 @@ def __search_single_genome__(gff_file):
                 ### cancel the search if the number of unique genes is not less than or equal to the min number set in the search:
                 if len(mandatory_genes_in_cluster) < int(args.min_genes):
                     print("Not enough unique mandatory genes in the cluster found, not reporting gene cluster")
+                    number_rejected_clusters_in_strain += 1
 
                     continue
 
@@ -741,7 +749,13 @@ def __search_single_genome__(gff_file):
 
     ####### record number of clusters / strain:
     with open(output_dir + "/"+strain+"/strain_statistics.csv","a") as output:
-        output.write("{strain},{clusters}\n".format(strain=strain,clusters = number_clusters_in_strain))
+        output.write("{strain},{clusters},{rejected_clusters}\n".format(strain=strain,clusters = number_clusters_in_strain,rejected_clusters = number_rejected_clusters_in_strain))
+
+
+    ### remove singlefastas folder:
+
+    os.system("rm -r {output_dir}/{strain}/singlefastas".format(output_dir=output_dir,strain=strain))
+    os.system("rm  {output_dir}/{strain}/contigs.fna".format(output_dir=output_dir,strain=strain))
 
 
 
@@ -795,13 +809,13 @@ def main():
 ##### other outputs :
 
     with open(output_dir+"/strain_statistics.csv","w") as output:
-        output.write("strain,number_of_operons\n")
+        output.write("strain,number_of_gene_clusters,number_rejected_clusters\n")
 
     with open(output_dir+"/gggenes_input.csv","w") as output:
-        output.write("operon,number,start,end,gene,strand,direction,strain,CDS_identifier\n")
+        output.write("operon,number,start,end,gene,strand,direction,strain,CDS_identifier,hamburger_CDS_identifier\n")
 
     with open(output_dir+"/operon_stats.csv", "w") as output:
-        output.write("operon_name,strain,contig,start,stop,length,number_of_mandatory_genes,found_number_of_mandatory_genes,percent_of_mandatory_genes_in_query,number_of_accessory_genes,found_number_of_accessory_genes,percent_of_accessory_genes_in_query,{hmm_genes},GC_cluster,GC_genome,GCcluster/GCgenome\n".format(hmm_genes=','.join(mandatory_names+accessory_names)))
+        output.write("gene_cluster,strain,contig,start,stop,length,number_of_mandatory_genes,found_number_of_mandatory_genes,percent_of_mandatory_genes_in_query,number_of_accessory_genes,found_number_of_accessory_genes,percent_of_accessory_genes_in_query,{hmm_genes},GC_cluster,GC_genome,GCcluster/GCgenome\n".format(hmm_genes=','.join(mandatory_names+accessory_names)))
 
 
 #2 for each gff file make an ouput folder and work in it:
@@ -824,6 +838,12 @@ def main():
     print(end-start)
 
 
+
+#10 Now group all of the different statistics files together
+
+    os.system("cat {output_dir}/*/strain_statistics.csv >> {output_dir}/strain_statistics.csv".format(output_dir=output_dir))
+    os.system("cat {output_dir}/*/gggenes_input.csv >> {output_dir}/gggenes_input.csv".format(output_dir=output_dir))
+    os.system("cat {output_dir}/*/operon_stats.csv >> {output_dir}/operon_stats.csv".format(output_dir=output_dir))
 
 
 #10 - Extract the protein sequences for each of the hits in the gene cluster
