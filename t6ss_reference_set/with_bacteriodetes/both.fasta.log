@@ -1,0 +1,190 @@
+IQ-TREE version 1.3.11.1 for Linux 64-bit built Feb  1 2016
+Copyright (c) 2011-2015 Nguyen Lam Tung, Olga Chernomor, Arndt von Haeseler and Bui Quang Minh.
+
+Host:    djwilliams-HP-EliteBook-830-G5 (AVX2, FMA3, 15 GB RAM)
+Command: iqtree -s both.fasta -bb 1000
+Seed:    22652 (Using SPRNG - Scalable Parallel Random Number Generator)
+Time:    Tue Apr  7 16:35:30 2020
+Kernel:  AVX
+
+NOTE: Consider using the multicore version because your CPU has 8 cores!
+
+Reading alignment file both.fasta ... Fasta format detected
+Alignment most likely contains protein sequences
+Alignment has 72 sequences with 809 columns and 784 patterns (657 informative sites)
+                              Gap/Ambiguity  Composition  p-value
+   1  YP_211657.1_iii                24.85%    failed      0.56%
+   2  NC_003143_i3                   14.83%    passed     95.74%
+   3  NC_009708_i3                   14.83%    passed     95.74%
+   4  NC_010465_i3                   14.83%    passed     95.74%
+   5  NC_020211_2_i3                 14.34%    passed     89.17%
+   6  NC_008752_i3                   15.82%    passed     94.65%
+   7  NC_002927_i3                   15.08%    passed     33.90%
+   8  NC_020064_i3                   15.95%    passed     98.64%
+   9  NC_009832_i3                   16.07%    passed     98.38%
+  10  SM39                           16.07%    passed     98.71%
+  11  NC_020211_i3                   16.07%    passed     98.27%
+  12  GCA_000513215.1_DB11_genomic   16.07%    passed     98.27%
+  13  NC_013956_i3                   16.56%    passed     91.37%
+  14  NC_014121_i3                   16.81%    passed     97.18%
+  15  NC_013961_i3                   16.32%    passed     97.92%
+  16  NC_008702_i3                   17.55%    passed     99.88%
+  17  NC_002516_i3                   17.18%    passed     78.62%
+  18  NC_008463_i3                   17.18%    passed     78.62%
+  19  NC_004129_i3                   17.43%    passed     89.72%
+  20  AJ320483_i3                    16.32%    passed     77.07%
+  21  NC_011205_i3                   15.70%    passed     70.10%
+  22  NC_016810_i3                   16.32%    passed     77.07%
+  23  NC_016856_i3                   16.32%    passed     77.07%
+  24  JF766712_i3                    28.18%    passed     90.82%
+  25  NC_013716_i3                   17.06%    passed     92.65%
+  26  NC_017626_i4b                  19.65%    passed     30.83%
+  27  NC_002516_i4a                  16.56%    passed     90.97%
+  28  NC_008463_i4a                  16.56%    passed     92.03%
+  29  NC_013716_i4a                  18.05%    passed     50.95%
+  30  NC_005966_i4b                  18.42%    passed     99.70%
+  31  NC_009085_i4b                  27.44%    passed     98.78%
+  32  NC_010400_i4b                  18.42%    passed     99.65%
+  33  KC432605_i4b                   18.42%    passed     99.32%
+  34  NC_003296_i4b                  17.68%    passed     38.19%
+  35  NC_007651_i4b                  17.43%    passed     35.87%
+  36  NC_011000_i4b                  17.55%    passed     47.45%
+  37  NC_012779_i4b                  18.91%    passed     82.76%
+  38  AY424360_i4b                   17.68%    passed     50.12%
+  39  NC_013508_i4b                  19.90%    passed     49.03%
+  40  NC_002947_i4b                  16.07%    passed     97.20%
+  41  NC_007005_i4b                  16.32%    passed     87.83%
+  42  FJ790777_i5                    16.81%    passed     71.49%
+  43  NC_004605_i5                   15.70%    passed     46.37%
+  44  NC_003063_i5                   21.76%    failed      3.99%
+  45  NC_008378_i5                   21.38%    passed     13.02%
+  46  KF678349_i2                    16.19%    passed     72.38%
+  47  NC_004431_i2                   16.19%    passed     79.96%
+  48  NC_012731_2_i2                 16.32%    passed     99.70%
+  49  NC_013956_i2                   16.19%    passed     99.05%
+  50  NC_017626_i2                   16.07%    passed     99.65%
+  51  NC_013961_i2                   16.19%    passed     95.31%
+  52  NC_009832_i2                   16.19%    passed     99.79%
+  53  NC_020064_i2                   15.95%    passed     99.51%
+  54  JX436460_i1                    20.40%    failed      0.13%
+  55  NC_002516_i1                   18.54%    passed     97.40%
+  56  NC_008463_i1                   18.54%    passed     96.43%
+  57  NC_004578_i1                   18.42%    passed     92.20%
+  58  FJ790776_i1                    18.54%    passed     65.84%
+  59  NC_004603_i1                   18.54%    passed     68.25%
+  60  NC_007650_i1                   16.93%    passed     36.80%
+  61  NC_006349_i1                   16.93%    passed     80.52%
+  62  NC_006351_i1                   16.93%    passed     79.51%
+  63  NC_002947_2_i1                 26.45%    passed     95.89%
+  64  NC_002947_i1                   18.05%    passed     97.14%
+  65  NC_008095_i1                   18.67%    passed     86.45%
+  66  NC_011274_i1                   18.79%    passed     85.68%
+  67  NC_002506_i1                   18.42%    passed     80.60%
+  68  NZ_AAKJ02000013_i1             18.42%    passed     80.60%
+  69  NC_010554_i1                   17.80%    passed     48.91%
+  70  NC_022000_i1                   17.80%    passed     48.91%
+  71  NC_004547_i1                   18.54%    passed     85.67%
+  72  NC_008570_i1                   18.54%    passed     95.10%
+****  TOTAL                          17.76%  3 sequences failed composition chi2 test (p-value<5%; df=19)
+NOTE: 1 identical sequences will be ignored during tree search
+
+Create initial parsimony tree by phylogenetic likelihood library (PLL)... 0.038 seconds
+Generating 1000 samples for ultrafast bootstrap...
+Max candidate trees (tau): 7100
+WARNING: Default model may be under-fitting. Use option '-m TEST' to select best-fit model.
+
+NOTE: 12 MB RAM is required!
+Estimate model parameters (epsilon = 0.100)
+1. Initial log-likelihood: -37666.233
+Optimal log-likelihood: -37252.836
+Parameters optimization took 1 rounds (0.177 sec)
+
+--------------------------------------------------------------------
+|             INITIALIZING CANDIDATE TREE SET                      |
+--------------------------------------------------------------------
+Computing ML distances based on estimated model parameters... 0.201 sec
+Computing BIONJ tree...
+0.002 seconds
+Log-likelihood of BIONJ tree: -37222.496
+Generating 98 parsimony trees... 2.471 seconds 84 distinct starting trees
+Computing log-likelihood of 84 initial trees ... 7.248 seconds
+Optimizing top 20 initial trees with NNI...
+Iteration 1 / LogL: -37177.224 / Time: 0h:0m:10s
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 1: -37177.160
+Iteration 2 / LogL: -37177.247 / Time: 0h:0m:11s
+Iteration 3 / LogL: -37177.250 / Time: 0h:0m:11s
+Iteration 4 / LogL: -37177.249 / Time: 0h:0m:11s
+Iteration 5 / LogL: -37177.228 / Time: 0h:0m:12s
+Iteration 6 / LogL: -37177.250 / Time: 0h:0m:12s
+Iteration 7 / LogL: -37177.227 / Time: 0h:0m:12s
+Iteration 8 / LogL: -37177.228 / Time: 0h:0m:13s
+Iteration 9 / LogL: -37177.250 / Time: 0h:0m:13s
+Iteration 10 / LogL: -37177.250 / Time: 0h:0m:13s
+Iteration 11 / LogL: -37177.228 / Time: 0h:0m:14s
+Iteration 12 / LogL: -37177.169 / Time: 0h:0m:14s
+Iteration 13 / LogL: -37177.170 / Time: 0h:0m:14s
+Iteration 14 / LogL: -37177.170 / Time: 0h:0m:15s
+Iteration 15 / LogL: -37177.168 / Time: 0h:0m:15s
+Iteration 16 / LogL: -37177.169 / Time: 0h:0m:16s
+Iteration 17 / LogL: -37177.170 / Time: 0h:0m:16s
+Iteration 18 / LogL: -37177.170 / Time: 0h:0m:16s
+Iteration 19 / LogL: -37177.182 / Time: 0h:0m:17s
+Iteration 20 / LogL: -37177.194 / Time: 0h:0m:17s
+Average CPU time for 1 NNI search: 0.368
+Finish initializing candidate tree set. Number of distinct locally optimal trees: 17
+Current best tree score: -37177.160 / CPU time: 17.089
+--------------------------------------------------------------------
+|               OPTIMIZING CANDIDATE TREE SET                      |
+--------------------------------------------------------------------
+Iteration 30 / LogL: -37178.439 / Time: 0h:0m:26s (0h:1m:5s left)
+Iteration 40 / LogL: -37177.185 / Time: 0h:0m:37s (0h:0m:58s left)
+Iteration 50 / LogL: -37177.417 / Time: 0h:0m:48s (0h:0m:50s left)
+NOTE: 5154 bootstrap candidate trees evaluated (logl-cutoff: -37241.908)
+Iteration 60 / LogL: -37177.391 / Time: 0h:1m:0s (0h:0m:41s left)
+Iteration 70 / LogL: -37207.095 / Time: 0h:1m:10s (0h:0m:31s left)
+Iteration 80 / LogL: -37177.229 / Time: 0h:1m:21s (0h:0m:21s left)
+Iteration 90 / LogL: -37190.728 / Time: 0h:1m:32s (0h:0m:11s left)
+Iteration 100 / LogL: -37177.199 / Time: 0h:1m:43s (0h:0m:1s left)
+NOTE: 12700 bootstrap candidate trees evaluated (logl-cutoff: -37352.479)
+NOTE: Bootstrap correlation coefficient of split occurrence frequencies: 0.999
+TREE SEARCH COMPLETED AFTER 101 ITERATIONS / Time: 0h:1m:44s
+
+--------------------------------------------------------------------
+|                    FINALIZING TREE SEARCH                        |
+--------------------------------------------------------------------
+Performs final model parameters optimization
+Estimate model parameters (epsilon = 0.010)
+1. Initial log-likelihood: -37177.156
+Optimal log-likelihood: -37177.154
+Parameters optimization took 1 rounds (0.103 sec)
+
+BEST SCORE FOUND : -37177.154
+Creating bootstrap support values...
+Split supports printed to NEXUS file both.fasta.splits.nex
+Total tree length: 13.838
+
+Total number of iterations: 101
+CPU time used for tree search: 104.123 sec (0h:1m:44s)
+Wall-clock time used for tree search: 104.140 sec (0h:1m:44s)
+Total CPU time used: 105.035 sec (0h:1m:45s)
+Total wall-clock time used: 105.066 sec (0h:1m:45s)
+
+Computing bootstrap consensus tree...
+Reading input file both.fasta.splits.nex...
+71 taxa and 230 splits.
+Consensus tree written to both.fasta.contree
+Log-likelihood of consensus tree: -37177.157
+Reading input trees file both.fasta.contree
+
+Analysis results written to: 
+  IQ-TREE report:                both.fasta.iqtree
+  Maximum-likelihood tree:       both.fasta.treefile
+  Likelihood distances:          both.fasta.mldist
+
+Ultrafast bootstrap approximation results written to:
+  Split support values:          both.fasta.splits.nex
+  Consensus tree:                both.fasta.contree
+  Screen log file:               both.fasta.log
+
+Date and Time: Tue Apr  7 16:37:15 2020

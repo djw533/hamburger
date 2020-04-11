@@ -2,6 +2,10 @@
 
 import os, time, multiprocessing
 
+
+###set hamburger base directory:
+# hamburger_base_directory = ''
+
 ###### parse arguments
 
 def parseArgs():
@@ -18,6 +22,14 @@ def parseArgs():
                 action='store',
                 required=True,
                 help='Original output directory of hamburger')
+        parser.add_argument('-t',
+                '--tree',
+                action='store',
+                help='Treefile to plot associated T6SS subtype presence/absence with (optional)')
+        parser.add_argument('-r',
+                '--root',
+                action='store',
+                help='Tipname to root tree (using flag -t, otherwise will midpoint root)')
     except:
         print("An exception occurred with argument parsing. Check your provided options.")
         traceback.print_exc()
@@ -30,11 +42,13 @@ def parseArgs():
 
 def __extract_tssBC_sequences__(directory): # looks for tssBC, finds the closet copies, makes sure there is one sequence each and the genes are an acceptable length
     #### get the strain name from the directory:
+    args = parseArgs()
 
     strain = directory.split('/')[-1]
     #print(strain)
 
     ## check to see if any gene clusters were extracted:
+    print(directory)
 
     strain_statistics_data = open("{directory}/strain_statistics.csv".format(directory = directory))
     strain_statistics = strain_statistics_data.readlines()
@@ -195,6 +209,7 @@ def __extract_tssBC_sequences__(directory): # looks for tssBC, finds the closet 
 
 
 def __concatenate_alignments__(aln_1, aln_2, concatenated_output_aln): # must have the same names for this to work
+    args = parseArgs()
     alignment_1 = open(aln_1).readlines()
 
     alignment_2 = open(aln_2).readlines()
@@ -247,6 +262,60 @@ def __concatenate_alignments__(aln_1, aln_2, concatenated_output_aln): # must ha
             output.write(''.join(sequence))
 
 
+def __align_sequences__(gene_name): # cat tssB/tssC sequences in reference and those found by hamburger
+    args = parseArgs()
+    os.system("cat {output_dir}/*/*_{gene_name}.faa {hamburger_base_directory}/t6ss_reference_set/{gene_name}.fasta > {output_dir}/all_observed_{gene_name}.faa".format(hamburger_base_directory=hamburger_base_directory,output_dir=args.input_dir, gene_name=gene_name))
+    os.system("muscle -in {output_dir}/all_observed_{gene_name}.faa -out {output_dir}/all_observed_{gene_name}_aligned.fasta".format(output_dir=args.input_dir, gene_name=gene_name))
+
+
+# def __run_mash_sketch__(fasta_addresses):
+#
+#
+#
+# def __run_mash_dist__(fasta_addresses):
+
+
+# def __compare_t6_subtypes__(cluster_stats, current_dir):
+#
+#     ### read in the cluster data
+#     cluster_data = open(cluster_stats)
+#     cluster_lines = cluster_data.readlines()
+#     cluster_data.close()
+#
+#     #create a dictionary of these subtypes
+#     subtype_dict = {}
+#
+#     # add subtypes as keys to dict:
+#     for line in cluster_lines:
+#         toks = line.split(',')
+#         #get the subtype:
+#         subtype = toks[-1]
+#         #add to dictionary, create key if doesn't already exist:
+#         if subtype not in subtype_dict:
+#             subtype_dict[subtype] = []
+#         ## now set the cluster name and add to the dictionary for that subtype:
+#         cluster_name = toks[0]
+#         subtype_dict[subtype].append(cluster_name)
+#
+#     ## now need to addresses of the fasta files for the clusters:
+#     # get cwd:
+#     working_dir = os.getcwd()
+#     os.system("ls {working_dir}*/*cluster_*.fna > cluster_fasta_addresses.txt".format(working_dir = working_dir))
+#
+#     # run mash sketch:
+#     __run_mash_sketch__("cluster_fasta_addresses.txt")
+#
+#
+#     #get list of mash addresses:
+#     os.system("ls {working_dir}*/*cluster_*.fna.msh > cluster_fasta_addresses.txt".format(working_dir = working_dir))
+#     # run mash dist
+#     __run_mash_dist__("cluster_msh_addresses.txt")
+
+
+
+
+
+
 ### main script
 def main():
 
@@ -257,10 +326,16 @@ def main():
 
     list_of_dirs = []
     # r=root, d=directories, f = files
+    first_search = True
     for r, d, f in os.walk(args.input_dir):
-        if r.endswith("/"):
-            continue # don't want to include the root directory name
+        # if first_search == True:
+        #     first_search == False # set this so that we don't just take the root file:
+        #     continue # don't want to include the root directory name
         list_of_dirs.append(r)
+
+
+    list_of_dirs = list_of_dirs[1:]
+
 
     #print(list_of_dirs)
 
@@ -277,19 +352,18 @@ def main():
 
     result = pool.map(__extract_tssBC_sequences__, list_of_dirs)
 
+    # for dirname in list_of_dirs:
+    #     __extract_tssBC_sequences__(dirname)
+
     #### once extracted from each - as will multiprocess these stages - concatenate all of these, align, concatenate again, draw tree and then pass to R:
 
 
-    ### adding in the reference set as well ---- need to sort out the absolute links here when putting onto github!!
-    os.system("cat {output_dir}/*/*_tssC.faa ~/github/hamburger/t6ss_reference_set/tssC.fasta > {output_dir}/all_observed_tssC.faa".format(output_dir=args.input_dir))
-    os.system("cat {output_dir}/*/*_tssB.faa ~/github/hamburger/t6ss_reference_set/tssB.fasta > {output_dir}/all_observed_tssB.faa".format(output_dir=args.input_dir))
+    ### now multiprocess the alignments:
+    sequences_to_align = ["tssB","tssC"]
 
-    ## concatenate the reference set as well:
+    pool = multiprocessing.Pool()
 
-
-    ### align:
-    os.system("muscle -in {output_dir}/all_observed_tssC.faa -out {output_dir}/all_observed_tssC_aligned.fasta".format(output_dir=args.input_dir))
-    os.system("muscle -in {output_dir}/all_observed_tssB.faa -out {output_dir}/all_observed_tssB_aligned.fasta".format(output_dir=args.input_dir))
+    result = pool.map(__align_sequences__, sequences_to_align)
 
 
     #### concatenate alignments:
@@ -301,6 +375,21 @@ def main():
     os.system("iqtree -s {output_dir}/tssBC_alignment.fasta -bb 1000".format(output_dir=args.input_dir))
 
     ## now - pass to R to group together the different types of T6SS that were identified
+
+    os.chdir(args.input_dir)
+
+    os.system("Rscript {hamburger_base_directory}/scripts/filter_t6_types.R".format(hamburger_base_directory=hamburger_base_directory))
+
+
+
+    #### now compare the different t6 subtypes using mash:
+
+    #__compare_t6_subtypes__()
+
+    ### plot with phylogeny if it's given:
+    if args.tree is not None:
+        os.system("Rscript {hamburger_base_directory}/scripts/plot_t6_types_with_phylogeny.R {tree}".format(tree = args.tree,hamburger_base_directory=hamburger_base_directory))
+
 
     end = time.time()
 

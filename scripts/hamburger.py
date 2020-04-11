@@ -21,6 +21,7 @@ import time
 import multiprocessing as mp
 from multiprocessing import Process
 import multiprocessing
+import tqdm
 
 print("Number of processors: ", mp.cpu_count())
 
@@ -32,7 +33,13 @@ print("Number of processors: ", mp.cpu_count())
 
 hmmsearch='hmmsearch'
 
+# ### need the directory where hamburger is installed:
+# hamburger_base_directory = ""
+
 ### and for the supplied models for standard pipeline & parameters
+
+T6SS_core = "{hamburger_base_directory}/models/T6SS/T6SS_core.hmm".format(hamburger_base_directory=hamburger_base_directory)
+T6SS_accessory = "{hamburger_base_directory}/models/T6SS/T6SS_accessory.hmm".format(hamburger_base_directory=hamburger_base_directory)
 
 
 ###### parse arguments
@@ -119,7 +126,8 @@ def parseArgs():
         parser.add_argument('-o',
 			    '--output',
 			    action='store',
-                default="HaMBURGER_output_{time}".format(time='_'.join('_'.join(str(datetime.now()).split('.')[0].split(':')).split())),
+                default="Hamburger_output",
+                #default="HaMBURGER_output_{time}".format(time='_'.join('_'.join(str(datetime.now()).split('.')[0].split(':')).split())),
 			    help='Output directory, default = Current date and time')
     except:
         print("An exception occurred with argument parsing. Check your provided options.")
@@ -369,38 +377,64 @@ def __gene_names_in_cluster__(gene_num_in_cluster, hmmer_output, strain):
     ### now report the number of unique gene hits found in the cluster:
     return(gene_names)
 
-def extract_a2b(start_gene, stop_gene, annotation, strain, cluster_num, upstream, downstream, contig, output_dir):
-    """ Take sequence and annotation from gff3 files between genomic point A and B, given both base indices """
+def extract_a2b(start_gene, stop_gene, annotation, strain, cluster_num, upstream, downstream, contig, output_dir, orientation):
+    """ Take sequence and annotation from gff3 files between genomic point A and B, given both base indices
+    Orientation should be either 'same', 'forward', or 'reverse' """
 
 
     ### creating list for the extracted annotation for later use:
     cluster_annotation = []
 
-
     start_got = False
     stop_got = False
 
-    ## find start and stop
-    for gff_line in annotation:
-        if gff_line.startswith('#'):
-            continue
+    ### check in the start and the stop are the same...
 
-        id = gff_line.split("\t")[8].split(";")[0].split("=")[1]
+    if orientation == "same":
+        for gff_line in annotation:
+            if gff_line.startswith('#'):
+                continue # ignore the hashed lines
 
-        if id == start_gene:
-            feature_start = gff_line.split('\t')[3]
-            feature_stop = gff_line.split('\t')[4]
-            start_index = min(feature_start, feature_stop)
-            start_got = True
+            id = gff_line.split("\t")[8].split(";")[0].split("=")[1]
 
-        elif id == stop_gene:
-            feature_start = gff_line.split('\t')[3]
-            feature_stop = gff_line.split('\t')[4]
-            stop_index = min(feature_start, feature_stop)
-            stop_got = True
+            if id == start_gene:
+                feature_start = gff_line.split('\t')[3]
+                feature_stop = gff_line.split('\t')[4]
+                start_index = min(feature_start, feature_stop)
+                stop_index = max(feature_start, feature_stop)
+                start_got = True
+                stop_got == True
 
-        elif stop_got == True and start_got == True:
-            continue
+
+    else:
+        ## find start and stop
+        for gff_line in annotation:
+            if gff_line.startswith('#'):
+                continue
+
+            id = gff_line.split("\t")[8].split(";")[0].split("=")[1]
+
+            if id == start_gene:
+                feature_start = gff_line.split('\t')[3]
+                feature_stop = gff_line.split('\t')[4]
+                if orientation == "forward":
+                    start_index = min(feature_start, feature_stop)
+                elif orientation == "reverse":
+                    start_index = max(feature_start, feature_stop)
+                start_got = True
+
+            elif id == stop_gene:
+                feature_start = gff_line.split('\t')[3]
+                feature_stop = gff_line.split('\t')[4]
+                stop_index = min(feature_start, feature_stop)
+                if orientation == "forward":
+                    stop_index = max(feature_start, feature_stop)
+                elif orientation == "reverse":
+                    stop_index = min(feature_start, feature_stop)
+                stop_got = True
+
+            elif stop_got == True and start_got == True:
+                continue
 
 
     #print 'Checking to see if hit is on the positive or negative strand: -----'
@@ -542,7 +576,7 @@ def __search_single_genome__(gff_file):
     ##### repeat the name changing here....
     ### if t6ss flag requested then set these using the t6ss default setting
     if args.t6ss == True:
-        min_genes_num = 8
+        min_genes_num = 11
         genes_gap_num = 12
         mandatory_models = T6SS_core#"/home/djwilliams/github/hamburger/models/T6SS/T6SS_core.hmm"
         accessory_models = T6SS_accessory#"/home/djwilliams/github/hamburger/models/T6SS/T6SS_accessory.hmm"
@@ -567,16 +601,17 @@ def __search_single_genome__(gff_file):
 
     mandatory_names = __read_hmms__(mandatory_models)
 
-    if accessory_models:
+    if args.accessory == True or args.t6ss == True:
         accessory_names = __read_hmms__(accessory_models)
 
     number_clusters_in_strain = 0
     number_rejected_clusters_in_strain = 0
+    number_contig_break_clusters_in_strain = 0
 
 
     output_dir = args.output
 
-    print(gff_file)
+    #print(gff_file)
 
     ### take the strain name (last field from "_" separator and remove the .gff from the end:)
 
@@ -633,6 +668,16 @@ def __search_single_genome__(gff_file):
 
 #5 - Cluster the HMMER hits according to the parameters
 
+
+    if len(mandatory_hmmer_genes) == 0:
+        ##no hits
+        with open(output_dir+"/log_file.txt", "a") as output:
+            output.write("No hmmer hits in {strain}".format(strain =strain))
+        ### and write to strain_statistics.csv
+        with open(output_dir + "/"+strain+"/strain_statistics.csv","a") as output:
+            output.write("{strain},{clusters},{rejected_clusters}\n".format(strain=strain,clusters = "0",rejected_clusters = "0"))
+        return
+
     filtered_groups = __clustering_func__(total_hmmer_genes,genes_gap_num,min_genes_num)
 
 #6 - Check that clusters are on the the same contigs
@@ -648,8 +693,8 @@ def __search_single_genome__(gff_file):
     counter = 0
 
     #### check to see if there are no gene clusters that are reported:
-    if len(filtered_groups) == 0:
-        print("No gene clusters found")
+    #if len(filtered_groups) == 0:
+        #print("No gene clusters found")
         #continue
 
     for group in filtered_groups: # now getting into working with each gene cluster/gene cluster
@@ -664,6 +709,8 @@ def __search_single_genome__(gff_file):
 
             with open(output_dir+"/log_file.txt", "a") as output:
                 output.write("Contig break over gene cluster in {strain} \n\n".format(strain = strain))
+                number_contig_break_clusters_in_strain += 1
+
             ### need to output this in some manner
 
             continue
@@ -692,7 +739,7 @@ def __search_single_genome__(gff_file):
 
                 ### cancel the search if the number of unique genes is not less than or equal to the min number set in the search:
                 if len(mandatory_genes_in_cluster) < int(min_genes_num):
-                    print("Not enough unique mandatory genes in the cluster found, not reporting gene cluster")
+                #    print("Not enough unique mandatory genes in the cluster found, not reporting gene cluster")
                     number_rejected_clusters_in_strain += 1
 
                     continue
@@ -706,7 +753,7 @@ def __search_single_genome__(gff_file):
                 ## do the same again - are there enough genes:
                 #print(number_query_types)
                 if len(query_types) < int(min_genes_num):
-                    print("Not enough unique mandatory genes in the cluster found, not reporting gene cluster")
+                #    print("Not enough unique mandatory genes in the cluster found, not reporting gene cluster")
 
                     continue
 
@@ -723,8 +770,16 @@ def __search_single_genome__(gff_file):
         min_gene = list_of_genes[strain+"_"+str(min(group))]
         max_gene = list_of_genes[strain+"_"+str(max(group))]
 
+        ## get orientation, or if single gene:
+        if min_gene == max_gene:
+            orientation = "same"
+        elif min_gene < max_gene:
+            orientation = "forward"
+        elif min_gene > max_gene:
+            orientation = "reverse"
 
-        extraction_details = extract_a2b(min_gene, max_gene, annotation, strain, str(counter), args.upstream, args.downstream, contig, output_dir)
+
+        extraction_details = extract_a2b(min_gene, max_gene, annotation, strain, str(counter), args.upstream, args.downstream, contig, output_dir,orientation)
 
         GC_cluster = extraction_details[0]
         cluster_start = extraction_details[1]
@@ -762,7 +817,7 @@ def __search_single_genome__(gff_file):
         #### start creating the output:
 
         with open(output_dir+"/"+strain+"/operon_stats.csv", "a") as output:
-            output.write("""{strain}_cluster_{counter},{strain},{contig},{start_on_contig},{stop_on_contig},{length},{number_of_mandatory_genes},{found_number_of_mandatory_genes},{percent_of_mandatory_genes_in_query},{number_of_accessory_genes},{found_number_of_accessory_genes},{percent_of_accessory_genes_in_query},{hmm_genes},{GC_cluster},{GC_genome},{GCoperonbyGCgenome}\n""".format(strain=strain,counter=str(counter),contig=contig,start_on_contig=str(cluster_start),stop_on_contig=str(cluster_stop),length=abs(int(length_of_operon)),number_of_mandatory_genes=len(mandatory_names),found_number_of_mandatory_genes=len(mandatory_genes_in_cluster),percent_of_mandatory_genes_in_query=(len(mandatory_genes_in_cluster)/len(mandatory_names))*100,number_of_accessory_genes=len(accessory_names),found_number_of_accessory_genes=len(accessory_genes_in_cluster),percent_of_accessory_genes_in_query=(len(accessory_genes_in_cluster)/len(accessory_names))*100,hmm_genes=','.join(list_of_mandatory+list_of_accessory),GC_cluster=GC_cluster,GC_genome=GC_genome,GCoperonbyGCgenome=str(GC_cluster/GC_genome)))
+            output.write("""{strain}_cluster_{counter},{strain},{contig},{start_on_contig},{stop_on_contig},{length},{number_of_mandatory_genes},{found_number_of_mandatory_genes},{percent_of_mandatory_genes_in_query},{number_of_accessory_genes},{found_number_of_accessory_genes},{percent_of_accessory_genes_in_query},{hmm_genes},{GC_cluster},{GC_genome},{GCoperonbyGCgenome}\n""".format(strain=strain,counter=str(counter),contig=contig,start_on_contig=str(cluster_start),stop_on_contig=str(cluster_stop),length=abs(int(length_of_operon)),number_of_mandatory_genes=len(mandatory_names),found_number_of_mandatory_genes=len(mandatory_genes_in_cluster),percent_of_mandatory_genes_in_query=(float(len(mandatory_genes_in_cluster))/float(len(mandatory_names)))*100,number_of_accessory_genes=len(accessory_names),found_number_of_accessory_genes=len(accessory_genes_in_cluster),percent_of_accessory_genes_in_query=(float(len(accessory_genes_in_cluster))/float(len(accessory_names)))*100,hmm_genes=','.join(list_of_mandatory+list_of_accessory),GC_cluster=GC_cluster,GC_genome=GC_genome,GCoperonbyGCgenome=str(GC_cluster/GC_genome)))
 
 
         ####now work out and write out the input for gggenes:
@@ -791,7 +846,7 @@ def __search_single_genome__(gff_file):
 
     ####### record number of clusters / strain:
     with open(output_dir + "/"+strain+"/strain_statistics.csv","a") as output:
-        output.write("{strain},{clusters},{rejected_clusters}\n".format(strain=strain,clusters = number_clusters_in_strain,rejected_clusters = number_rejected_clusters_in_strain))
+        output.write("{strain},{clusters},{rejected_clusters},{contig_break_clusters}\n".format(strain=strain,clusters = number_clusters_in_strain,rejected_clusters = number_rejected_clusters_in_strain,contig_break_clusters = number_contig_break_clusters_in_strain))
 
 
     ### remove singlefastas folder:
@@ -799,7 +854,244 @@ def __search_single_genome__(gff_file):
     os.system("rm -r {output_dir}/{strain}/singlefastas".format(output_dir=output_dir,strain=strain))
     os.system("rm  {output_dir}/{strain}/contigs.fna".format(output_dir=output_dir,strain=strain))
 
+def __search_single_genome_no_accessory__(gff_file):
 
+    args = parseArgs()
+
+    ##### repeat the name changing here....
+    ### if t6ss flag requested then set these using the t6ss default setting
+    if args.t6ss == True:
+        min_genes_num = 11
+        genes_gap_num = 12
+        mandatory_models = T6SS_core#"/home/djwilliams/github/hamburger/models/T6SS/T6SS_core.hmm"
+    elif args.t6ss == False:
+        if args.mandatory == False:
+            print("Need to provide input mandatory hmm profile(s): --mandatory")
+            sys.exit()
+        if args.min_genes == False:
+            print("Need to set the minimum number of hits: --min_genes)")
+            sys.exit()
+        if args.genes_gap == False:
+            print("Need to set the maximum genes gap: --genes_gap)")
+            sys.exit()
+        # now change the variable names from args.xxx
+        min_genes_num = args.min_genes
+        genes_gap_num = args.genes_gap
+        mandatory_models = args.mandatory
+
+
+
+    mandatory_names = __read_hmms__(mandatory_models)
+
+
+    number_clusters_in_strain = 0
+    number_rejected_clusters_in_strain = 0
+    number_contig_break_clusters_in_strain = 0
+
+
+    output_dir = args.output
+
+    #print(gff_file)
+
+    ### take the strain name (last field from "_" separator and remove the .gff from the end:)
+
+    strain = gff_file.split('/')[-1].replace(".gff","")
+
+    ### now made directory for this strain:
+    strain_dir = "{output_dir}/{strain}".format(output_dir = output_dir, strain = strain)
+    os.makedirs(strain_dir)
+
+#3 - extract protein sequences from the gff file
+
+### extract the protein sequences
+    prot_seqs = "{output_dir}/{strain}/{strain}.faa".format(output_dir = output_dir, strain = strain)
+    gff2faa_output = __gff2faa__(gff_file,prot_seqs,strain,output_dir)
+    #altered_gene_names = gff2faa_output[0] # a "yes" or "no" - is only no because this is currently set - look at later??
+    list_of_genes = gff2faa_output[1] # list of the new names to the names in the gff file
+    genes_and_contig = gff2faa_output[2]
+
+#4 - create TEMPORARY singlefasta files, fasta of the whole sequence, and separate annotation files
+
+    gff_split_output = __gff_splitter__(gff_file, strain_dir)
+
+    annotation = gff_split_output[0]
+    GC_genome = gff_split_output[1]
+
+    ##set singlefasta directory
+    singlefasta_dir = "{strain_dir}/singlefastas".format(strain_dir = strain_dir)
+    __multifasta_to_singlefasta__("contigs.fna", strain_dir, singlefasta_dir)
+
+#5 - Run HMMER and filter according to the cutoff
+#- for both mandatory and accessory
+
+    mandatory_hmmer_tuple = __run_hmmer__(hmmsearch, mandatory_models, prot_seqs, args.cutoff, strain_dir, "mandatory")
+    mandatory_hmmer_output = mandatory_hmmer_tuple[0]
+    mandatory_hmmer_genes = mandatory_hmmer_tuple[1]
+
+
+    ###### then combine the accessory and mandatory results if required.... (think about adding any genes that are not allowed in gene clusters?)
+
+    total_hmmer_output = mandatory_hmmer_output
+    total_hmmer_genes = mandatory_hmmer_genes
+
+#5 - Cluster the HMMER hits according to the parameters
+
+    ### introduce break if there are no hmmer hits at all!:
+
+    if len(mandatory_hmmer_genes) == 0:
+        ##no hits
+        with open(output_dir+"/log_file.txt", "a") as output:
+            output.write("No hmmer hits in {strain}".format(strain =strain))
+        ### and write to strain_statistics.csv
+        with open(output_dir + "/"+strain+"/strain_statistics.csv","a") as output:
+            output.write("{strain},{clusters},{rejected_clusters},{contig_break_clusters}\n".format(strain=strain,clusters = "0",rejected_clusters = "0",contig_break_clusters = "0"))
+        return
+
+    filtered_groups = __clustering_func__(total_hmmer_genes,genes_gap_num,min_genes_num)
+
+#6 - Check that clusters are on the the same contigs
+
+
+    # print(annotation) # lines of the annotation from the gff file
+    # print(filtered_groups) # list of lists for each gene cluster from the (simple) algorithm
+    # print(strain) # name of the strain
+    # print(list_of_genes) # dictionary with the "new" gene number/identifier as the key and the "old" gene number/identifier as the value
+    # print(genes_and_contig) #dictionary with the "new" gene number/identifier as the key and the contig as the value
+
+    ##set counter for the number of the gene cluster
+    counter = 0
+
+    #### check to see if there are no gene clusters that are reported:
+    #if len(filtered_groups) == 0:
+        #print("No gene clusters found")
+        #continue
+
+    for group in filtered_groups: # now getting into working with each gene cluster/gene cluster
+        #print(group)
+        ## make name
+
+        contig_check =  __same_contigs_check__(group, strain, genes_and_contig)
+        #print(contig_check)
+
+        if contig_check[0] == False:
+            ### the hits are spread across more than one contigs
+
+            with open(output_dir+"/log_file.txt", "a") as output:
+                output.write("Contig break over gene cluster in {strain} \n\n".format(strain = strain))
+            ### need to output this in some manner
+
+            continue
+
+        elif contig_check[0] == True: # if true, hits are on a single contig
+
+
+            contig = contig_check[1] # store the name of the contig
+            #update counter
+
+            ### now check for the presence / absence of mandatory / accessory genes:
+
+
+
+
+            query_types = __gene_names_in_cluster__(group, mandatory_hmmer_output, strain)
+
+            ## do the same again - are there enough genes:
+            #print(number_query_types)
+            if len(query_types) < int(min_genes_num):
+            #    print("Not enough unique mandatory genes in the cluster found, not reporting gene cluster")
+
+                continue
+
+
+#7 - Extract the gff subsequence - with and without the extra sequences
+
+        #### now set a name for the gene cluster:
+        counter += 1 # update counter now that the identified gene cluster has passed filtering
+        number_clusters_in_strain += 1 # and same for counting clusters / strain
+
+        cluster_name = "{strain}_cluster_{counter}".format(strain=strain, counter = str(counter))
+
+        #### find numbers for the beginning and the end of the gene cluster:
+        min_gene = list_of_genes[strain+"_"+str(min(group))]
+        max_gene = list_of_genes[strain+"_"+str(max(group))]
+
+
+        ## get orientation, or if single gene:
+        if min_gene == max_gene:
+            orientation = "same"
+        elif min_gene < max_gene:
+            orientation = "forward"
+        elif min_gene > max_gene:
+            orientation = "reverse"
+
+
+
+        extraction_details = extract_a2b(min_gene, max_gene, annotation, strain, str(counter), args.upstream, args.downstream, contig, output_dir,orientation)
+
+        GC_cluster = extraction_details[0]
+        cluster_start = extraction_details[1]
+        cluster_stop = extraction_details[2]
+        extended_start = extraction_details[3]
+        extended_stop = extraction_details[4]
+        cluster_annotation = extraction_details[5]
+
+
+        length_of_operon = cluster_start - cluster_stop
+        if length_of_operon < 0:
+            length_of_operon = length_of_operon * -1  ### change if the direction isn't left to write (i.s. on the reverse strand if you were to look at it in artemis)
+
+
+
+#8 Write out the stats
+
+
+        ### get dictionary for gene names:
+        mandatory_genes_in_cluster = __gene_names_in_cluster__(group, mandatory_hmmer_output, strain)
+
+
+        #### get lists of the numbers of genes for each hmmer query, for the genes that are present in the operon
+        list_of_mandatory  = []
+        for gene in mandatory_names:
+            if gene not in mandatory_genes_in_cluster:
+                list_of_mandatory.append("0")
+            else:
+                list_of_mandatory.append(str(len(mandatory_genes_in_cluster[gene])))
+
+        #### start creating the output:
+
+        with open(output_dir+"/"+strain+"/operon_stats.csv", "a") as output:
+            output.write("""{strain}_cluster_{counter},{strain},{contig},{start_on_contig},{stop_on_contig},{length},{number_of_mandatory_genes},{found_number_of_mandatory_genes},{percent_of_mandatory_genes_in_query},{hmm_genes},{GC_cluster},{GC_genome},{GCoperonbyGCgenome}\n""".format(strain=strain,counter=str(counter),contig=contig,start_on_contig=str(cluster_start),stop_on_contig=str(cluster_stop),length=abs(int(length_of_operon)),number_of_mandatory_genes=len(mandatory_names),found_number_of_mandatory_genes=len(mandatory_genes_in_cluster),percent_of_mandatory_genes_in_query=(float(len(mandatory_genes_in_cluster))/float(len(mandatory_names)))*100,hmm_genes=','.join(list_of_mandatory),GC_cluster=GC_cluster,GC_genome=GC_genome,GCoperonbyGCgenome=str(GC_cluster/GC_genome)))
+
+
+        ####now work out and write out the input for gggenes:
+
+        ### first, if using the accessory flag, need to create a new dictionary:
+
+
+        all_genes_in_cluster = mandatory_genes_in_cluster
+
+        ### now run a function to extract the gggenes information
+
+        gggenes_input = __extract_gggenes_info__(cluster_annotation, all_genes_in_cluster,list_of_genes, extended_start, extended_stop, strain, output_dir, str(counter))
+
+
+
+        with open(output_dir+"/"+strain+"/gggenes_input.csv","a") as output:
+            for line in gggenes_input:
+                output.write(line+"\n")
+
+
+
+
+    ####### record number of clusters / strain:
+    with open(output_dir + "/"+strain+"/strain_statistics.csv","a") as output:
+        output.write("{strain},{clusters},{rejected_clusters},{contig_break_clusters}\n".format(strain=strain,clusters = number_clusters_in_strain,rejected_clusters = number_rejected_clusters_in_strain,contig_break_clusters = str(number_contig_break_clusters_in_strain)))
+
+
+    ### remove singlefastas folder:
+
+    os.system("rm -r {output_dir}/{strain}/singlefastas".format(output_dir=output_dir,strain=strain))
+    os.system("rm  {output_dir}/{strain}/contigs.fna".format(output_dir=output_dir,strain=strain))
 
 def f(q):
     q.put([42, None, 'hello'])
@@ -812,7 +1104,7 @@ def main():
 
     ### if t6ss flag requested then set these using the t6ss default setting
     if args.t6ss == True:
-        min_genes_num = 8
+        min_genes_num = 11
         genes_gap_num = 12
         mandatory_models = T6SS_core#"/home/djwilliams/github/hamburger/models/T6SS/T6SS_core.hmm"
         accessory_models = T6SS_accessory#"/home/djwilliams/github/hamburger/models/T6SS/T6SS_accessory.hmm"
@@ -834,6 +1126,7 @@ def main():
             accessory_models = args.accessory
 
 
+
     ### make new output directory first:
     output_dir = args.output
     os.makedirs(output_dir)
@@ -846,44 +1139,22 @@ def main():
 
     mandatory_names = __read_hmms__(mandatory_models)
 
-    if accessory_models:
+    if args.accessory == True or args.t6ss == True:
         accessory_names = __read_hmms__(accessory_models)
+
 
 
 
         ### make log file and write into it:
 
-        with open(output_dir+"/log_file.txt", "w") as output:
-            output.write("""--------------------HaMBURGER--------------------
-    \n
-    -------HMmer Based UndeRstandinG of opERons------
-    \n
-    Using the following parameters as input: \n\n
-    \tMinimum number of genes for cluster:  -> {min_genes}\n
-    \tMaximum gap between genes in cluster: -> {genes_gap}\n
-    \tUpstream region length:               -> {upstream}\n
-    \tDownstream region length:             -> {downstream}\n
-    \tHmmer cutoff:                         -> {cutoff}\n
-    \tSearching for the following genes     ->\n
-    \tMandatory genes:\n
-    \t\t{mandatory_genes}\n\n
-    \tAccessory genes:\n
-    \t\t{accessory_genes}\n
-    """.format(min_genes=min_genes_num, genes_gap=genes_gap_num, cutoff=args.cutoff, upstream=args.upstream, downstream=args.downstream, mandatory_genes='\n\t\t'.join(mandatory_names), accessory_genes='\n\t\t'.join(accessory_names)))
-
-
 
 ##### other outputs :
 
     with open(output_dir+"/strain_statistics.csv","w") as output:
-        output.write("strain,number_of_gene_clusters,number_rejected_clusters\n")
+        output.write("strain,number_of_gene_clusters,number_rejected_clusters,number_contig_break_clusters\n")
 
     with open(output_dir+"/gggenes_input.csv","w") as output:
         output.write("operon,number,start,end,gene,strand,direction,strain,CDS_identifier,hamburger_CDS_identifier\n")
-
-    with open(output_dir+"/operon_stats.csv", "w") as output:
-        output.write("gene_cluster,strain,contig,start,stop,length,number_of_mandatory_genes,found_number_of_mandatory_genes,percent_of_mandatory_genes_in_query,number_of_accessory_genes,found_number_of_accessory_genes,percent_of_accessory_genes_in_query,{hmm_genes},GC_cluster,GC_genome,GCcluster/GCgenome\n".format(hmm_genes=','.join(mandatory_names+accessory_names)))
-
 
 #2 for each gff file make an ouput folder and work in it:
 
@@ -891,7 +1162,6 @@ def main():
 
 
 
-    # multiprocess
     gff_files = args.gff
 
 
@@ -899,13 +1169,80 @@ def main():
 
 
     pool = multiprocessing.Pool()
-    result = pool.map(__search_single_genome__, gff_files)
+
+
+
+    if args.accessory == True or args.t6ss == True:
+
+        with open(output_dir+"/log_file.txt", "w") as output:
+            output.write("""--------------------HaMBURGER--------------------
+            \n
+            -------HMmer Based UndeRstandinG of opERons------
+            \n
+            Using the following parameters as input: \n\n
+            \tMinimum number of genes for cluster:  -> {min_genes}\n
+            \tMaximum gap between genes in cluster: -> {genes_gap}\n
+            \tUpstream region length:               -> {upstream}\n
+            \tDownstream region length:             -> {downstream}\n
+            \tHmmer cutoff:                         -> {cutoff}\n
+            \tSearching for the following genes     ->\n
+            \tMandatory genes:\n
+            \t\t{mandatory_genes}\n\n
+            \tAccessory genes:\n
+            \t\t{accessory_genes}\n
+            """.format(min_genes=min_genes_num, genes_gap=genes_gap_num, cutoff=args.cutoff, upstream=args.upstream, downstream=args.downstream, mandatory_genes='\n\t\t'.join(mandatory_names), accessory_genes='\n\t\t'.join(accessory_names)))
+
+
+
+        with open(output_dir+"/operon_stats.csv", "w") as output:
+            output.write("gene_cluster,strain,contig,start,stop,length,number_of_mandatory_genes,found_number_of_mandatory_genes,percent_of_mandatory_genes_in_query,number_of_accessory_genes,found_number_of_accessory_genes,percent_of_accessory_genes_in_query,{hmm_genes},GC_cluster,GC_genome,GCcluster/GCgenome\n".format(hmm_genes=','.join(mandatory_names+accessory_names)))
+
+
+        # multiprocess
+        #result = pool.map(__search_single_genome__, gff_files)
+
+        print("Running Hamburger - using both mandatory and accessory HMMs")
+        for _ in tqdm.tqdm(pool.imap_unordered(__search_single_genome__, gff_files), total=len(gff_files)):
+            pass
+
+
+    else:
+
+
+        with open(output_dir+"/log_file.txt", "w") as output:
+            output.write("""--------------------HaMBURGER--------------------
+            \n
+            -------HMmer Based UndeRstandinG of opERons------
+            \n
+            Using the following parameters as input: \n\n
+            \tMinimum number of genes for cluster:  -> {min_genes}\n
+            \tMaximum gap between genes in cluster: -> {genes_gap}\n
+            \tUpstream region length:               -> {upstream}\n
+            \tDownstream region length:             -> {downstream}\n
+            \tHmmer cutoff:                         -> {cutoff}\n
+            \tSearching for the following genes     ->\n
+            \tMandatory genes:\n
+            \t\t{mandatory_genes}\n\n
+            """.format(min_genes=min_genes_num, genes_gap=genes_gap_num, cutoff=args.cutoff, upstream=args.upstream, downstream=args.downstream, mandatory_genes='\n\t\t'.join(mandatory_names)))
+
+
+        with open(output_dir+"/operon_stats.csv", "w") as output:
+            output.write("gene_cluster,strain,contig,start,stop,length,number_of_mandatory_genes,found_number_of_mandatory_genes,percent_of_mandatory_genes_in_query,{hmm_genes},GC_cluster,GC_genome,GCcluster/GCgenome\n".format(hmm_genes=','.join(mandatory_names)))
+
+
+        # multiprocess
+        #result = pool.map(__search_single_genome_no_accessory__, gff_files)
+
+        print("Running Hamburger - no accessory HMMs given")
+        for _ in tqdm.tqdm(pool.imap_unordered(__search_single_genome_no_accessory__, gff_files), total=len(gff_files)):
+            pass
 
 
     end = time.time()
 
 
     print(end-start)
+
 
 
     #strain by strain for checking:
