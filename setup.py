@@ -48,10 +48,10 @@ if cwd.endswith("/hamburger"):# and "hamburger.py" in files:
         output.write(''.join(lines))
 
     with open("scripts/post_hamburger_t6SS_search.py","w") as output:
-        output.write(''.join(lines))
+        output.write(''.join(data_post_search_lines))
 
     with open("scripts/filter_t6_types.py","w") as output:
-        output.write(''.join(lines))
+        output.write(''.join(Rscript_file_lines))
 
 
     print("Hamburger base directory set to scripts")
