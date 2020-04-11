@@ -44,13 +44,13 @@ if cwd.endswith("/hamburger"):# and "hamburger.py" in files:
 
     ##now write back out:
 
-    with open("scripts/hamburger_check.py","w") as output:
+    with open("scripts/hamburger.py","w") as output:
         output.write(''.join(lines))
 
-    with open("scripts/post_hamburger_t6SS_search_check.py","w") as output:
+    with open("scripts/post_hamburger_t6SS_search.py","w") as output:
         output.write(''.join(lines))
 
-    with open("scripts/filter_t6_types_check.py","w") as output:
+    with open("scripts/filter_t6_types.py","w") as output:
         output.write(''.join(lines))
 
 

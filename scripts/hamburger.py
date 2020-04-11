@@ -576,7 +576,7 @@ def __search_single_genome__(gff_file):
     ##### repeat the name changing here....
     ### if t6ss flag requested then set these using the t6ss default setting
     if args.t6ss == True:
-        min_genes_num = 11
+        min_genes_num = 8
         genes_gap_num = 12
         mandatory_models = T6SS_core#"/home/djwilliams/github/hamburger/models/T6SS/T6SS_core.hmm"
         accessory_models = T6SS_accessory#"/home/djwilliams/github/hamburger/models/T6SS/T6SS_accessory.hmm"
@@ -861,7 +861,7 @@ def __search_single_genome_no_accessory__(gff_file):
     ##### repeat the name changing here....
     ### if t6ss flag requested then set these using the t6ss default setting
     if args.t6ss == True:
-        min_genes_num = 11
+        min_genes_num = 8
         genes_gap_num = 12
         mandatory_models = T6SS_core#"/home/djwilliams/github/hamburger/models/T6SS/T6SS_core.hmm"
     elif args.t6ss == False:
@@ -1104,7 +1104,7 @@ def main():
 
     ### if t6ss flag requested then set these using the t6ss default setting
     if args.t6ss == True:
-        min_genes_num = 11
+        min_genes_num = 8
         genes_gap_num = 12
         mandatory_models = T6SS_core#"/home/djwilliams/github/hamburger/models/T6SS/T6SS_core.hmm"
         accessory_models = T6SS_accessory#"/home/djwilliams/github/hamburger/models/T6SS/T6SS_accessory.hmm"
