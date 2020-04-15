@@ -23,7 +23,7 @@ from multiprocessing import Process
 import multiprocessing
 import tqdm
 
-print("Number of processors: ", mp.cpu_count())
+#print("Number of processors: ", mp.cpu_count())
 
 #from multiprocessing import Process
 
@@ -92,7 +92,7 @@ def parseArgs():
 			    action='store',
                 default=4,
 			    help='Minimum number of genes in gene cluster, default = 4')
-        parser.add_argument('-n',
+        parser.add_argument('-l',
 			    '--genes_gap',
 			    action='store',
                 default=10,
@@ -119,6 +119,11 @@ def parseArgs():
 			    '--t6ss',
 			    action='store_true',
 			    help='Automatic searching for T6SSs')
+        parser.add_argument('-n',
+			    '--num_threads',
+			    action='store',
+                default = 1,
+			    help='Number of threads to use, default = 1')
 #        parser.add_argument('-p',
 #			    '--pfam',
 #			    action='store',
@@ -1169,7 +1174,7 @@ def main():
     start = time.time()
 
 
-    pool = multiprocessing.Pool()
+    pool = multiprocessing.Pool(processes=int(args.num_threads))
 
 
 

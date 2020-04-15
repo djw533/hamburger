@@ -3,10 +3,11 @@
 
 library(ggtree)
 library(ape)
-library(ggplot2)
+#library(ggplot2)
 library(castor)
 library(gggenes)
 library(dplyr)
+library(RColorBrewer)
 
 #### add in colours
 cols <- c("i1" = "#3cb44b",
