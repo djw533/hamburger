@@ -378,7 +378,7 @@ def main():
 
     os.chdir(args.input_dir)
 
-    os.system("Rscript {hamburger_base_directory}/scripts/filter_t6_types.R".format(hamburger_base_directory=hamburger_base_directory))
+    os.system("Rscript {hamburger_base_directory}/scripts/filter_t6_types.R {hamburger_base_directory}".format(hamburger_base_directory=hamburger_base_directory))
 
 
 
