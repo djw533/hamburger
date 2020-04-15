@@ -39,6 +39,24 @@ tree_cols <- c("TssA" = "#3cb44b",
                "PP2C" = "purple",
                "TagF_N" = "yellow")
 
+
+ #########================= preliminary - read arguments =================#######
+
+ #### filter input - feed the whole tree to be used:
+ args = commandArgs(trailingOnly=TRUE)
+
+
+ # test if there is at least one argument: if not, return an error
+ if (length(args)==0) {
+   stop("At least one argument must be supplied (input file).n", call.=FALSE)
+ } else if (length(args) > 1) {
+   node_to_root <- args[2]
+ } else if (length(args) > 2) {
+   stop("Too many arguments supplied", call.=FALSE)
+ }
+
+hamburger_base_directory <- args[1]
+
 ###########=============== 1 - read in tssBC tree and associate reference set subtypes =================##############
 
 tssBC_tree <- read.tree("tssBC_alignment.fasta.treefile")

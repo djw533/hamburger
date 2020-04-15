@@ -34,7 +34,8 @@ print("Number of processors: ", mp.cpu_count())
 hmmsearch='hmmsearch'
 
 # ### need the directory where hamburger is installed:
-# hamburger_base_directory = ""
+hamburger_base_directory = os.path.abspath(__file__).split("/scripts/hamburger.py")[0]
+
 
 ### and for the supplied models for standard pipeline & parameters
 

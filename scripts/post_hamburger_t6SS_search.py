@@ -4,7 +4,7 @@ import os, time, multiprocessing
 
 
 ###set hamburger base directory:
-# hamburger_base_directory = ''
+hamburger_base_directory = os.path.abspath(__file__).split("/scripts/hamburger.py")[0]
 
 ###### parse arguments
 
