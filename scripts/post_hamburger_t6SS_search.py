@@ -30,6 +30,11 @@ def parseArgs():
                 '--root',
                 action='store',
                 help='Tipname to root tree (using flag -t, otherwise will midpoint root)')
+        parser.add_argument('-n',
+                '--num_threads',
+                action='store',
+                default = 1,
+                help='Tipname to root tree (using flag -t, otherwise will midpoint root)')
     except:
         print("An exception occurred with argument parsing. Check your provided options.")
         traceback.print_exc()
@@ -337,6 +342,13 @@ def main():
     list_of_dirs = list_of_dirs[1:]
 
 
+    if int(args.num_threads) > 2:
+        num_threads_for_muscle = 2
+
+    else:
+        num_threads_for_muscle = 1
+
+
     #print(list_of_dirs)
 
 
@@ -348,7 +360,7 @@ def main():
     #or multiprocess - go through each dir of the hamburger output, and extract a tssB and tssC sequence from each cluster, if they are there
 
 
-    pool = multiprocessing.Pool()
+    pool = multiprocessing.Pool(processes = int(args.num_threads))
 
     result = pool.map(__extract_tssBC_sequences__, list_of_dirs)
 
@@ -361,7 +373,7 @@ def main():
     ### now multiprocess the alignments:
     sequences_to_align = ["tssB","tssC"]
 
-    pool = multiprocessing.Pool()
+    pool = multiprocessing.Pool(processes = num_threads_for_muscle)
 
     result = pool.map(__align_sequences__, sequences_to_align)
 
@@ -372,7 +384,7 @@ def main():
     __concatenate_alignments__("{output_dir}/all_observed_tssB_aligned.fasta".format(output_dir=args.input_dir), "{output_dir}/all_observed_tssC_aligned.fasta".format(output_dir=args.input_dir), "{output_dir}/tssBC_alignment.fasta".format(output_dir=args.input_dir))
 
     ### draw tree:
-    os.system("iqtree -s {output_dir}/tssBC_alignment.fasta -bb 1000".format(output_dir=args.input_dir))
+    os.system("iqtree -s {output_dir}/tssBC_alignment.fasta -bb 1000 -m LG -nt {threads}".format(output_dir=args.input_dir, threads=int(args.num_threads)))
 
     ## now - pass to R to group together the different types of T6SS that were identified
 
