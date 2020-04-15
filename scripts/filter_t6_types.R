@@ -3,7 +3,7 @@
 
 library(ggtree)
 library(ape)
-#library(ggplot2)
+library(ggplot2)
 library(castor)
 library(gggenes)
 library(dplyr)
