@@ -23,9 +23,10 @@ def parseArgs():
                 required=True,
                 help='Original output directory of hamburger')
         parser.add_argument('-t',
-                '--tree',
+                '--tree_building',
                 action='store',
-                help='Treefile to plot associated T6SS subtype presence/absence with (optional)')
+                default = "fasttree"
+                help='Tree building software to use [iqtree, fasttree], default=[fasttree]')
         parser.add_argument('-r',
                 '--root',
                 action='store',
@@ -210,7 +211,7 @@ def __extract_tssBC_sequences__(directory): # looks for tssBC, finds the closet 
             ### stop the loop if both tssC and tssB have been found:
 
             if tssB_extracted == True and tssC_extracted == True:
-                break # done, can now move to the next cluster
+                continue # done, can now move to the next cluster
 
 
 def __concatenate_alignments__(aln_1, aln_2, concatenated_output_aln): # must have the same names for this to work
@@ -384,7 +385,10 @@ def main():
     __concatenate_alignments__("{output_dir}/all_observed_tssB_aligned.fasta".format(output_dir=args.input_dir), "{output_dir}/all_observed_tssC_aligned.fasta".format(output_dir=args.input_dir), "{output_dir}/tssBC_alignment.fasta".format(output_dir=args.input_dir))
 
     ### draw tree:
-    os.system("iqtree -s {output_dir}/tssBC_alignment.fasta -bb 1000 -m LG -nt {threads}".format(output_dir=args.input_dir, threads=int(args.num_threads)))
+    #os.system("iqtree -s {output_dir}/tssBC_alignment.fasta -bb 1000 -m LG -nt {threads}".format(output_dir=args.input_dir, threads=int(args.num_threads)))
+    ## use fasttree instead - is quicker??:
+    os.system("FastTree {output_dir}/tssBC_alignment.fasta > tssBC_alignment.treefile".format(output_dir=args.input_dir))
+
 
     ## now - pass to R to group together the different types of T6SS that were identified
 

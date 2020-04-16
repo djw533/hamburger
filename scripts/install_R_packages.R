@@ -32,7 +32,7 @@ ipak <- function(pkg){
 
 
 # usage
-packages <- c("ggplot2", "dplyr", "gggenes", "RColorBrewer", "phytools", "castor", "ape", "ggtree")
+packages <- c("ggplot2", "dplyr", "gggenes", "RColorBrewer", "phytools", "castor", "ape", "ggtree","glue","genoplotR")
 ipak(packages)
 
 

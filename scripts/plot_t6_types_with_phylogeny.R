@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 library(ggplot2)
-library(ggtree)
+#library(ggtree)
 library(phytools)
 library(dplyr)
 
@@ -50,7 +50,7 @@ if (is.null(strains_tree)) {
 if (length(args)== 2) {
   rooted_strains_tree <- root(strains_tree, outgroup = gsub("#","_",args[2]))
 } else if (length(args) == 1) {
-  rooted_strains_tree <- midpoint.root(strains_tree)
+  rooted_strains_tree <- strains_trees
 }
 
 g1 <- ggtree(rooted_strains_tree, ladderize = T, right = T)
@@ -130,9 +130,9 @@ for (name in colnames(specific_t6_subtypes)) {
   col_seq <- paste(name,"_",col_seq,sep='')
   names(new_cols) <- col_seq
   cols <- append(cols,new_cols)
-  
+
   ### now put the prefix in the gheatmap....:
-  
+
   specific_t6_subtypes[[name]] <- paste0(name,"_",specific_t6_subtypes[[name]],sep="")
 }
 
@@ -160,9 +160,9 @@ for (name in colnames(scraps)) {
   col_seq <- paste("grey_",col_seq,sep='')
   names(new_cols) <- col_seq
   cols <- append(cols,new_cols)
-  
+
   ### now put the prefix in the gheatmap....:
-  
+
   scraps[[name]] <- paste0("grey_",scraps[[name]],sep="")
 }
 
