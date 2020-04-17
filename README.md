@@ -29,29 +29,37 @@ Output for loading into itol can be requested with the -q flag
 The following dependencies are required:
 
 System:
-    HMMER
-  (and for T6SS subtyping):
-    Muscle
-    Fasttree
+```
+HMMER
+```
+(and for T6SS subtyping):
+```
+Muscle
+Fasttree
+```
 
 Python libraries:
-  Biopython
-  tqdm
+```
+Biopython
+tqdm
+```
 
 R libraries (for T6SS subtyping) - can be installed using the install_R_packages.R script:
-  ggplot2
-  dplyr
-  gggenes
-  RColorBrewer
-  castor
-  ape
-  ggtree
-  glue
+```
+ggplot2
+dplyr
+gggenes
+RColorBrewer
+castor
+ape
+ggtree
+glue
+```
 
 
 
 
-
+```
 usage: hamburger.py [-h] [-i MANDATORY] [-a ACCESSORY] -g GFF [GFF ...]
                     [-m MIN_GENES] [-l GENES_GAP] [-u UPSTREAM]
                     [-d DOWNSTREAM] [-c CUTOFF] [-t] [-n NUM_THREADS] [-k]
@@ -103,3 +111,4 @@ arguments:
                         write over a previously existing output folder!
   -q, --itol            Create itol output for number of T6SSs and subtypes
                         per strain
+```
