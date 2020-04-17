@@ -102,13 +102,13 @@ def parseArgs():
                 type = int,
 			    action='store',
                 default=0,
-			    help='Number of nucleotides to include upstream of gene cluster, default = 0')
+			    help='Number of nucleotides to include upstream/"right" of gene cluster, default = 0')
         parser.add_argument('-d',
 			    '--downstream',
                 type = int,
 			    action='store',
                 default=0,
-			    help='Number of nucleotides to include downstream of gene cluster, default = 0')
+			    help='Number of nucleotides to include downstream/"left" of gene cluster, default = 0')
         parser.add_argument('-c',
 			    '--cutoff',
                 type = float,
