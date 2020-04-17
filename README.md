@@ -5,23 +5,24 @@ HMmer Based UndeRstandinG of gene clustERs
 A tool to extract and analyse contiguous sets of genes in bacterial genomes, given a concatenated set of protein hidden markov models (HMMs). Written in python3
 
 
-![Schematic for hamburger](https://raw.githubusercontent.com/djw533/hamburger/schematic/hamburger_schematic.png)
+![Schematic for hamburger](https://raw.githubusercontent.com/djw533/hamburger/master/schematic/hamburger_schematic.png)
 
 
 Hamburger uses sets of concatenated HMMs to search for sets of genes co-localised in a genome, using annotated gffs as input (ideally from prokka).
 
 Hamburger can be used as follows:
 
+```
 python <hamburger_directory>/scripts/hamburger.py -g *.gff -i <concatenated set of hmms.hmm> -o <new output directory to write in> -m <minimum number of genes needed to report gene cluster> -l <max permitted gap of non-model genes between genes of interest>
-
+```
 An automated search and subtyping of T6SSs can be used as follows:
-
+```
 python <hamburger_directory>/scripts/hamburger.py -g *.gff -t  -o <new output directory to write in>
-
-Followed by a filtering step:
-
+```
+Followed by a filtering step
+```
 python  <hamburger_directory>/scripts/post_hamburger_t6SS_search.py -i <output directory used for hamburger search>
-
+```
 
 Output for loading into itol can be requested with the -q flag
 
@@ -44,7 +45,7 @@ R libraries (for T6SS subtyping) - can be installed using the install_R_packages
   RColorBrewer
   castor
   ape
-  ggtreeg
+  ggtree
   glue
 
 
