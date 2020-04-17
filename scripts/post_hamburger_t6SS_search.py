@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
 import os, time, multiprocessing
+from shutil import which
+import sys
+
 
 
 ###set hamburger base directory:
@@ -22,20 +25,20 @@ def parseArgs():
                 action='store',
                 required=True,
                 help='Original output directory of hamburger')
-        parser.add_argument('-t',
-                '--tree_building',
-                action='store',
-                default = "fasttree"
-                help='Tree building software to use [iqtree, fasttree], default=[fasttree]')
-        parser.add_argument('-r',
-                '--root',
-                action='store',
-                help='Tipname to root tree (using flag -t, otherwise will midpoint root)')
+        # parser.add_argument('-t',
+        #         '--tree_building',
+        #         action='store',
+        #         default = "fasttree",
+        #         help='Tree building software to use [iqtree, fasttree], default = fasttree')
+        parser.add_argument('-a',
+                '--itol',
+                action='store_true',
+                help='Create itol output for number of T6SSs and subtypes per strain')
         parser.add_argument('-n',
                 '--num_threads',
                 action='store',
                 default = 1,
-                help='Tipname to root tree (using flag -t, otherwise will midpoint root)')
+                help='Number of threads to use, default = 1)')
     except:
         print("An exception occurred with argument parsing. Check your provided options.")
         traceback.print_exc()
@@ -46,6 +49,12 @@ def parseArgs():
 
 ##### functions
 
+def __is_tool__(name):
+    """Check whether `name` is on PATH and marked as executable."""
+
+    # from whichcraft import which
+    return which(name) is not None
+
 def __extract_tssBC_sequences__(directory): # looks for tssBC, finds the closet copies, makes sure there is one sequence each and the genes are an acceptable length
     #### get the strain name from the directory:
     args = parseArgs()
@@ -54,7 +63,7 @@ def __extract_tssBC_sequences__(directory): # looks for tssBC, finds the closet 
     #print(strain)
 
     ## check to see if any gene clusters were extracted:
-    print(directory)
+    #print(directory)
 
     strain_statistics_data = open("{directory}/strain_statistics.csv".format(directory = directory))
     strain_statistics = strain_statistics_data.readlines()
@@ -104,10 +113,11 @@ def __extract_tssBC_sequences__(directory): # looks for tssBC, finds the closet 
             clusters[cluster][gene].append(id)
 
 
+
     for cluster, gene in clusters.items():
         requires_sorting  = False
         if len(gene) < 2: # if there are not both genes for TssB and TssC - then can't analyse this cluster
-        #    print("Not the genes required in {cluster}".format(cluster = cluster))
+            print("Not the genes required in {cluster}".format(cluster = cluster))
             continue
         for gene_name, ids in gene.items():
 
@@ -173,10 +183,10 @@ def __extract_tssBC_sequences__(directory): # looks for tssBC, finds the closet 
             if chosen_TssC == id.strip("\n"):
                 tssC_length = int(abs(stop-(start - 1)) / 3)
 
-        if tssC_length < 400 or tssC_length > 520 or tssB_length < 150 or tssB_length > 200:
-            ## not the right length:
-            #print("not the right length in {cluster}".format(cluster=cluster))
-            continue
+        # if tssC_length < 300 or tssC_length > 600 or tssB_length < 100 or tssB_length > 300:
+        #     ## not the right length:
+        #     print("not the right length in {cluster}, tssB_length = {tssB_length}, tssC_length = {tssC_length}".format(cluster=cluster,tssB_length = tssB_length, tssC_length = tssC_length))
+        #     continue
 
 
         ### extract the protein sequences if passed from all of these...
@@ -211,7 +221,10 @@ def __extract_tssBC_sequences__(directory): # looks for tssBC, finds the closet 
             ### stop the loop if both tssC and tssB have been found:
 
             if tssB_extracted == True and tssC_extracted == True:
-                continue # done, can now move to the next cluster
+                break # done, can now move to the next cluster
+
+        if tssB_extracted != True or tssC_extracted != True:
+            print("something wrong with {cluster}".format(cluster=cluster))
 
 
 def __concatenate_alignments__(aln_1, aln_2, concatenated_output_aln): # must have the same names for this to work
@@ -325,10 +338,65 @@ def __align_sequences__(gene_name): # cat tssB/tssC sequences in reference and t
 ### main script
 def main():
 
+
+    ## check that programs are installed:
+
+    if __is_tool__("muscle") == False:
+        print("Please install muscle before running hamburger. Exiting script.")
+        sys.exit()
+
+
     start = time.time()
 
 
     args = parseArgs()
+
+
+    ## once arguments set - check for tree building software - allow both fasttree and FastTree:
+
+    # if args.tree_building == "fasttree":
+
+    if __is_tool__("fasttree") == False and __is_tool__("FastTree") == False:
+        print("Please install muscle. Exiting script.")
+        sys.exit()
+
+    elif __is_tool__("fasttree") == True:
+        tree_software = "fasttree"
+
+    elif __is_tool__("FastTree") == True:
+        tree_software = "FastTree"
+
+    ## check iqtree:
+
+    # elif args.tree_building == "iqtree":
+    #
+    #     if __is_tool__("iqtree") == False:
+    #         print("Please install iqtree. Exiting script.")
+    #         sys.exit()
+    #
+    # else:
+    #     print("Please use either iqtree or fasttree with -t. Exiting script.")
+    #     sys.exit()
+
+
+    ##check that the R dependencies are here:
+    os.system("Rscript {hamburger_base_directory}/scripts/check_R_dependencies.R {hamburger_base_directory}".format(hamburger_base_directory=hamburger_base_directory))
+
+    ## check the dependencies_check
+    dependencies_check = open("dependencies_check.csv")
+    d = dependencies_check.readlines()
+    dependencies_check.close()
+    if len(d) > 1: # then some R packages aren't installed:
+        print("The following R libraries are not installed, please install them before running this script:")
+        for l in d[1:]:
+            print(l.strip())
+        print("Exiting script.")
+        os.remove("dependencies_check.csv")
+        sys.exit()
+    ## also remove here:
+    os.remove("dependencies_check.csv")
+
+
 
     list_of_dirs = []
     # r=root, d=directories, f = files
@@ -343,7 +411,7 @@ def main():
     list_of_dirs = list_of_dirs[1:]
 
 
-    if int(args.num_threads) > 2:
+    if int(args.num_threads) > 1:
         num_threads_for_muscle = 2
 
     else:
@@ -385,9 +453,13 @@ def main():
     __concatenate_alignments__("{output_dir}/all_observed_tssB_aligned.fasta".format(output_dir=args.input_dir), "{output_dir}/all_observed_tssC_aligned.fasta".format(output_dir=args.input_dir), "{output_dir}/tssBC_alignment.fasta".format(output_dir=args.input_dir))
 
     ### draw tree:
-    #os.system("iqtree -s {output_dir}/tssBC_alignment.fasta -bb 1000 -m LG -nt {threads}".format(output_dir=args.input_dir, threads=int(args.num_threads)))
-    ## use fasttree instead - is quicker??:
-    os.system("FastTree {output_dir}/tssBC_alignment.fasta > tssBC_alignment.treefile".format(output_dir=args.input_dir))
+    # if args.tree_building == "iqtree":
+    #
+    #     os.system("{tree_software} -s {output_dir}/tssBC_alignment.fasta -bb 1000 -m LG -nt {threads}".format(output_dir=args.input_dir, threads=int(args.num_threads), tree_software = tree_software))
+    # ## use fasttree instead - is quicker??:
+    # elif args.tree_building == "fasttree":
+
+    os.system("{tree_software} {output_dir}/tssBC_alignment.fasta > {output_dir}/tssBC_alignment.fasta.treefile".format(output_dir=args.input_dir, tree_software = tree_software))
 
 
     ## now - pass to R to group together the different types of T6SS that were identified
@@ -397,14 +469,34 @@ def main():
     os.system("Rscript {hamburger_base_directory}/scripts/filter_t6_types.R {hamburger_base_directory}".format(hamburger_base_directory=hamburger_base_directory))
 
 
+    if args.itol == True:
+    ## now convert the T6SS subtypes info for itol output:
+        subtypes_file  = open("T6SS_cluster_types.csv")
+        subtypes_data = subtypes_file.readlines()
+        subtypes_header = subtypes_data[0].split(',') # get the different headers required:
+        for num in range(1,len(subtypes_header)): # go through each one and make an itol input file:
+            #create list to write to file:
+            to_write = []
+            to_write.append("DATASET_GRADIENT\nSEPARATOR SPACE\nDATASET_LABEL {subtype}\nCOLOR #ff0000\nDATA\n".format(subtype = subtypes_header[num]))
+
+            #then cycle through the subtypes file:
+            for line in subtypes_data[1:]:
+                toks = line.split(',')
+                to_write.append("{strain} {number_observations}\n".format(strain = toks[0], number_observations = toks[num]))
+
+            ## now write out:
+            with open("{subtype}_itol.txt".format(subtype=subtypes_header[num]), "w") as output:
+                for l in to_write:
+                    output.write(l)
+
 
     #### now compare the different t6 subtypes using mash:
 
     #__compare_t6_subtypes__()
 
     ### plot with phylogeny if it's given:
-    if args.tree is not None:
-        os.system("Rscript {hamburger_base_directory}/scripts/plot_t6_types_with_phylogeny.R {tree}".format(tree = args.tree,hamburger_base_directory=hamburger_base_directory))
+    # if args.tree is not None:
+    #     os.system("Rscript {hamburger_base_directory}/scripts/plot_t6_types_with_phylogeny.R {tree}".format(tree = args.tree,hamburger_base_directory=hamburger_base_directory))
 
 
     end = time.time()

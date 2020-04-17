@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import traceback, os, math
+import traceback, os, math, sys
 
 import os.path
 
@@ -118,12 +118,16 @@ def parseArgs():
         parser.add_argument('-t',
 			    '--t6ss',
 			    action='store_true',
-			    help='Automatic searching for T6SSs')
+			    help='Automatic searching for T6SSs, uses min_genes = 8, genes_gap = 12, mandatory hmm profile of all 13 tss genes')
         parser.add_argument('-n',
 			    '--num_threads',
 			    action='store',
                 default = 1,
 			    help='Number of threads to use, default = 1')
+        parser.add_argument('-k',
+			    '--keep_files',
+			    action='store_true',
+			    help='Keep all intermediate files produced, default = False')
 #        parser.add_argument('-p',
 #			    '--pfam',
 #			    action='store',
@@ -140,6 +144,16 @@ def parseArgs():
         traceback.print_exc()
 
     return parser.parse_args()
+
+
+def __is_tool__(name):
+    """Check whether `name` is on PATH and marked as executable."""
+
+    # from whichcraft import which
+    from shutil import which
+
+    return which(name) is not None
+
 
 
 def __read_hmms__(input_hmm_file):
@@ -822,7 +836,7 @@ def __search_single_genome__(gff_file):
 
         #### start creating the output:
 
-        with open(output_dir+"/"+strain+"/operon_stats.csv", "a") as output:
+        with open(output_dir+"/"+strain+"/cluster_stats.csv", "a") as output:
             output.write("""{strain}_cluster_{counter},{strain},{contig},{start_on_contig},{stop_on_contig},{length},{number_of_mandatory_genes},{found_number_of_mandatory_genes},{percent_of_mandatory_genes_in_query},{number_of_accessory_genes},{found_number_of_accessory_genes},{percent_of_accessory_genes_in_query},{hmm_genes},{GC_cluster},{GC_genome},{GCoperonbyGCgenome}\n""".format(strain=strain,counter=str(counter),contig=contig,start_on_contig=str(cluster_start),stop_on_contig=str(cluster_stop),length=abs(int(length_of_operon)),number_of_mandatory_genes=len(mandatory_names),found_number_of_mandatory_genes=len(mandatory_genes_in_cluster),percent_of_mandatory_genes_in_query=(float(len(mandatory_genes_in_cluster))/float(len(mandatory_names)))*100,number_of_accessory_genes=len(accessory_names),found_number_of_accessory_genes=len(accessory_genes_in_cluster),percent_of_accessory_genes_in_query=(float(len(accessory_genes_in_cluster))/float(len(accessory_names)))*100,hmm_genes=','.join(list_of_mandatory+list_of_accessory),GC_cluster=GC_cluster,GC_genome=GC_genome,GCoperonbyGCgenome=str(GC_cluster/GC_genome)))
 
 
@@ -859,6 +873,34 @@ def __search_single_genome__(gff_file):
 
     os.system("rm -r {output_dir}/{strain}/singlefastas".format(output_dir=output_dir,strain=strain))
     os.system("rm  {output_dir}/{strain}/contigs.fna".format(output_dir=output_dir,strain=strain))
+
+def __clean_up_files__(gff_file):
+
+    args = parseArgs()
+    output_dir = args.output
+
+
+    strain = gff_file.split('/')[-1].replace(".gff","")
+
+    ### now made directory for this strain:
+    strain_dir = "{output_dir}/{strain}".format(output_dir = output_dir, strain = strain)
+
+    ## now remove the files that aren't:
+    ## faa file of the genome (used to find T6SS genes)
+    ## gff files
+    ## gggenes input
+    for root, dirs, files in os.walk(strain_dir):
+        for file in files:
+            if file.endswith(".gff"):
+                continue
+            elif file == "gggenes_input.csv":
+                continue
+            elif file == "{strain}.faa".format(strain = strain):
+                continue
+            else:
+                os.remove("{output_dir}/{strain}/{file}".format(output_dir = output_dir, strain = strain, file = file))
+
+
 
 def __search_single_genome_no_accessory__(gff_file):
 
@@ -1065,7 +1107,7 @@ def __search_single_genome_no_accessory__(gff_file):
 
         #### start creating the output:
 
-        with open(output_dir+"/"+strain+"/operon_stats.csv", "a") as output:
+        with open(output_dir+"/"+strain+"/cluster_stats.csv", "a") as output:
             output.write("""{strain}_cluster_{counter},{strain},{contig},{start_on_contig},{stop_on_contig},{length},{number_of_mandatory_genes},{found_number_of_mandatory_genes},{percent_of_mandatory_genes_in_query},{hmm_genes},{GC_cluster},{GC_genome},{GCoperonbyGCgenome}\n""".format(strain=strain,counter=str(counter),contig=contig,start_on_contig=str(cluster_start),stop_on_contig=str(cluster_stop),length=abs(int(length_of_operon)),number_of_mandatory_genes=len(mandatory_names),found_number_of_mandatory_genes=len(mandatory_genes_in_cluster),percent_of_mandatory_genes_in_query=(float(len(mandatory_genes_in_cluster))/float(len(mandatory_names)))*100,hmm_genes=','.join(list_of_mandatory),GC_cluster=GC_cluster,GC_genome=GC_genome,GCoperonbyGCgenome=str(GC_cluster/GC_genome)))
 
 
@@ -1105,8 +1147,22 @@ def f(q):
 #################################
 def main():
 
+
+
+    ## check if hmmsearch is installed:
+
+    if __is_tool__("hmmsearch") == False:
+        print("Please install hmmsearch before running hamburger")
+        sys.exit()
+
+
+
+
+
     start = time.time()
     args = parseArgs()
+
+
 
     ### if t6ss flag requested then set these using the t6ss default setting
     if args.t6ss == True:
@@ -1200,7 +1256,7 @@ def main():
 
 
 
-        with open(output_dir+"/operon_stats.csv", "w") as output:
+        with open(output_dir+"/cluster_stats.csv", "w") as output:
             output.write("gene_cluster,strain,contig,start,stop,length,number_of_mandatory_genes,found_number_of_mandatory_genes,percent_of_mandatory_genes_in_query,number_of_accessory_genes,found_number_of_accessory_genes,percent_of_accessory_genes_in_query,{hmm_genes},GC_cluster,GC_genome,GCcluster/GCgenome\n".format(hmm_genes=','.join(mandatory_names+accessory_names)))
 
 
@@ -1232,7 +1288,7 @@ def main():
             """.format(min_genes=min_genes_num, genes_gap=genes_gap_num, cutoff=args.cutoff, upstream=args.upstream, downstream=args.downstream, mandatory_genes='\n\t\t'.join(mandatory_names)))
 
 
-        with open(output_dir+"/operon_stats.csv", "w") as output:
+        with open(output_dir+"/cluster_stats.csv", "w") as output:
             output.write("gene_cluster,strain,contig,start,stop,length,number_of_mandatory_genes,found_number_of_mandatory_genes,percent_of_mandatory_genes_in_query,{hmm_genes},GC_cluster,GC_genome,GCcluster/GCgenome\n".format(hmm_genes=','.join(mandatory_names)))
 
 
@@ -1260,10 +1316,14 @@ def main():
 
     os.system("cat {output_dir}/*/strain_statistics.csv >> {output_dir}/strain_statistics.csv".format(output_dir=output_dir))
     os.system("cat {output_dir}/*/gggenes_input.csv >> {output_dir}/gggenes_input.csv".format(output_dir=output_dir))
-    os.system("cat {output_dir}/*/operon_stats.csv >> {output_dir}/operon_stats.csv".format(output_dir=output_dir))
+    os.system("cat {output_dir}/*/cluster_stats.csv >> {output_dir}/cluster_stats.csv".format(output_dir=output_dir))
 
 
-#10 - Extract the protein sequences for each of the hits in the gene cluster
+#10 - Cleanup:
+
+    if args.keep_files is False:
+        for gff_file in gff_files:
+            __clean_up_files__(gff_file)
 
 
 

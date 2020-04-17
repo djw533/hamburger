@@ -32,14 +32,5 @@ ipak <- function(pkg){
 
 
 # usage
-packages <- c("ggplot2", "dplyr", "gggenes", "RColorBrewer", "phytools", "castor", "ape", "ggtree","glue","genoplotR")
+packages <- c("ggplot2", "dplyr", "gggenes", "RColorBrewer", "castor", "ape", "ggtree","glue")
 ipak(packages)
-
-
-## then install ggtree:
-
-#source("https://bioconductor.org/biocLite.R")
-
-
-
-#BiocManager::install(c("ggtree"))

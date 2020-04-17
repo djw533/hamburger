@@ -56,7 +56,7 @@ tree_cols <- c("TssA" = "#3cb44b",
    stop("Too many arguments supplied", call.=FALSE)
  }
 
-hamburger_base_directory <- args[1]
+hamburger_base_directory <- "~/github/hamburger"#args[1]
 
 ###########=============== 1 - read in tssBC tree and associate reference set subtypes =================##############
 
@@ -146,7 +146,7 @@ for (i in 1:length(different_types)) {
 
 ### read in the statistics for merging:
 ### get in the gheatmap of presence / absence :
-cluster_stats <- read.csv("operon_stats.csv",
+cluster_stats <- read.csv("cluster_stats.csv",
                                            comment.char = "",
                                            header = T,
                                            stringsAsFactors = F)
@@ -156,7 +156,7 @@ cluster_stats <- read.csv("operon_stats.csv",
 strain_and_cluster <- subset.data.frame(cluster_stats, select = c("gene_cluster","strain"))
 strain_and_cluster$gene_cluster_backup <- strain_and_cluster$gene_cluster
 #replace the hashes with underscores:
-strain_and_cluster$gene_cluster <- gsub("#","_",strain_and_cluster$gene_cluster)
+#strain_and_cluster$gene_cluster <- gsub("#","_",strain_and_cluster$gene_cluster)
 ### merge in the t6ss subtype:
 strain_cluster_and_subtype <- merge(strain_and_cluster, all_types, by.x = "gene_cluster",by.y = "cluster", all.x = T)
 ## if NA for substype - call undetermined:
@@ -199,7 +199,7 @@ colnames(cluster_and_subtype) <- c("gene_cluster","T6SS_subtype")
 cluster_stats <- merge(cluster_stats, cluster_and_subtype, by.x = "gene_cluster",by.y ="gene_cluster")
 
 ###write this back out and overwrite:
-write.csv(file = "operon_stats.csv",
+write.csv(file = "cluster_stats_with_subtype.csv",
           cluster_stats,
           row.names = F,
           quote = F)
