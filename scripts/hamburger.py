@@ -74,7 +74,7 @@ def parseArgs():
                 '--mandatory',
                 action='store',
             #    required=True,
-                help='Mandatory hmm profile input <required> Set flag')
+                help='Mandatory hmm profile input <required if not using -t flag> ')
         parser.add_argument('-a',
                 '--accessory',
                 action='store',
@@ -86,7 +86,7 @@ def parseArgs():
                 nargs='+',
                 #help='<Required> Set flag',
                 required=True,
-			    help='Gff file(s) to search <required> Set flag')
+			    help='Gff file(s) to search <required>')
         parser.add_argument('-m',
 			    '--min_genes',
 			    action='store',
