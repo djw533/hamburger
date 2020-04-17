@@ -138,7 +138,12 @@ def parseArgs():
 			    action='store',
                 default="Hamburger_output",
                 #default="HaMBURGER_output_{time}".format(time='_'.join('_'.join(str(datetime.now()).split('.')[0].split(':')).split())),
-			    help='Output directory, default = Current date and time')
+			    help='Output directory, default =Hamburger output. Will not write over a previously existing output folder!')
+        parser.add_argument('-q',
+                '--itol',
+                action='store_true',
+                help='Create itol output for number of T6SSs and subtypes per strain')
+
     except:
         print("An exception occurred with argument parsing. Check your provided options.")
         traceback.print_exc()
@@ -897,6 +902,9 @@ def __clean_up_files__(gff_file):
                 continue
             elif file == "{strain}.faa".format(strain = strain):
                 continue
+            elif file == "strain_statistics.csv".format(strain = strain):
+                continue
+
             else:
                 os.remove("{output_dir}/{strain}/{file}".format(output_dir = output_dir, strain = strain, file = file))
 
@@ -1324,6 +1332,27 @@ def main():
     if args.keep_files is False:
         for gff_file in gff_files:
             __clean_up_files__(gff_file)
+
+
+    if args.itol == True:
+    ## now convert the T6SS subtypes info for itol output:
+        stats_file  = open("{output_dir}/strain_statistics.csv".format(output_dir=output_dir))
+        stats_data = stats_file.readlines()
+        stats_header = stats_data[0].split(',') # get the different headers required:
+        for num in range(1,len(stats_header)): # go through each one and make an itol input file:
+            #create list to write to file:
+            to_write = []
+            to_write.append("DATASET_GRADIENT\nSEPARATOR SPACE\nDATASET_LABEL {subtype}\nCOLOR #ff0000\nDATA\n".format(subtype = stats_header[num]))
+
+            #then cycle through the subtypes file:
+            for line in stats_data[1:]:
+                toks = line.split(',')
+                to_write.append("{strain} {number_observations}\n".format(strain = toks[0], number_observations = toks[num]))
+
+            ## now write out:
+            with open("{output_dir}/{subtype}_itol.txt".format(subtype=stats_header[num],output_dir=output_dir), "w") as output:
+                for l in to_write:
+                    output.write(l)
 
 
 

@@ -30,7 +30,7 @@ def parseArgs():
         #         action='store',
         #         default = "fasttree",
         #         help='Tree building software to use [iqtree, fasttree], default = fasttree')
-        parser.add_argument('-a',
+        parser.add_argument('-q',
                 '--itol',
                 action='store_true',
                 help='Create itol output for number of T6SSs and subtypes per strain')
@@ -39,6 +39,10 @@ def parseArgs():
                 action='store',
                 default = 1,
                 help='Number of threads to use, default = 1)')
+        parser.add_argument('-k',
+			    '--keep_files',
+			    action='store_true',
+			    help='Keep all intermediate files produced, default = False')
     except:
         print("An exception occurred with argument parsing. Check your provided options.")
         traceback.print_exc()
@@ -497,6 +501,14 @@ def main():
     ### plot with phylogeny if it's given:
     # if args.tree is not None:
     #     os.system("Rscript {hamburger_base_directory}/scripts/plot_t6_types_with_phylogeny.R {tree}".format(tree = args.tree,hamburger_base_directory=hamburger_base_directory))
+
+    #clean up :
+    if args.keep_files is False:
+        os.system("rm */*_tssC.faa */*_tssB.faa all_observed_tssC.faa all_observed_tssB.faa all_observed_tssB_aligned.fasta all_observed_tssC_aligned.fasta tssBC_alignment.fasta tssBC_alignment.fasta.treefile Rplots.pdf")
+        # for root, dirs, files in os.walk(strain_dir):
+        #     print(dirs)
+        #     print(files)
+
 
 
     end = time.time()
