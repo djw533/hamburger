@@ -1160,7 +1160,7 @@ def main():
     ## check if hmmsearch is installed:
 
     if __is_tool__("hmmsearch") == False:
-        print("Please install hmmsearch before running hamburger")
+        print("Please install hmmer before running hamburger")
         sys.exit()
 
 
