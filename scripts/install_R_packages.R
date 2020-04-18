@@ -26,6 +26,9 @@ ipak <- function(pkg){
     new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
     if (length(new.pkg))
         install.packages(new.pkg, repos="http://cran.r-project.org", dependencies = TRUE)
+        if ( new.pkg == "ggtree") {
+          BiocManager::install("ggtree")
+        }
     sapply(pkg, require, character.only = TRUE)
 }
 
