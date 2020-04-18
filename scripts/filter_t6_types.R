@@ -56,7 +56,7 @@ tree_cols <- c("TssA" = "#3cb44b",
    stop("Too many arguments supplied", call.=FALSE)
  }
 
-hamburger_base_directory <- "~/github/hamburger"#args[1]
+hamburger_base_directory <- args[1]
 
 ###########=============== 1 - read in tssBC tree and associate reference set subtypes =================##############
 
