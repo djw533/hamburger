@@ -349,17 +349,6 @@ def main():
         print("Please install muscle before running hamburger. Exiting script.")
         sys.exit()
 
-
-    start = time.time()
-
-
-    args = parseArgs()
-
-
-    ## once arguments set - check for tree building software - allow both fasttree and FastTree:
-
-    # if args.tree_building == "fasttree":
-
     if __is_tool__("fasttree") == False and __is_tool__("FastTree") == False:
         print("Please install muscle. Exiting script.")
         sys.exit()
@@ -391,7 +380,7 @@ def main():
     d = dependencies_check.readlines()
     dependencies_check.close()
     if len(d) > 1: # then some R packages aren't installed:
-        print("The following R libraries are not installed, please install them before running this script:")
+        print("The following R libraries are not installed, please install them before running this script. Dependencies can be installed using the install_R_packages.R script in the hamburger/scripts directory.")
         for l in d[1:]:
             print(l.strip())
         print("Exiting script.")
@@ -399,6 +388,18 @@ def main():
         sys.exit()
     ## also remove here:
     os.remove("dependencies_check.csv")
+
+    start = time.time()
+
+
+    args = parseArgs()
+
+
+    ## once arguments set - check for tree building software - allow both fasttree and FastTree:
+
+    # if args.tree_building == "fasttree":
+
+
 
 
 
