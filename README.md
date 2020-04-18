@@ -10,7 +10,7 @@ A tool to extract and analyse contiguous sets of genes in bacterial genomes, giv
 
 Hamburger uses sets of concatenated HMMs to search for sets of genes co-localised in a genome, using annotated gffs as input (ideally from prokka).
 
-Hamburger can be used as follows:
+Hamburger can be used as follows - where < > denotes user specific addresses/input:
 
 ```
 python <hamburger_directory>/scripts/hamburger.py -g *.gff -i <concatenated set of hmms.hmm> -o <new output directory to write in> -m <minimum number of genes needed to report gene cluster> -l <max permitted gap of non-model genes between genes of interest>
