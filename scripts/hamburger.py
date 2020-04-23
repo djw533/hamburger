@@ -16,6 +16,8 @@ from Bio.Seq import reverse_complement
 from Bio import SeqIO
 from Bio.SeqUtils import GC
 import time
+from shutil import which
+
 
 ### multiprocessing
 import multiprocessing as mp
@@ -155,7 +157,6 @@ def __is_tool__(name):
     """Check whether `name` is on PATH and marked as executable."""
 
     # from whichcraft import which
-    from shutil import which
 
     return which(name) is not None
 
@@ -619,14 +620,14 @@ def __search_single_genome__(gff_file):
         min_genes_num = args.min_genes
         genes_gap_num = args.genes_gap
         mandatory_models = args.mandatory
-        if args.accessory == True: # if accessory models were given change variable name
+        if args.accessory is not None: # if accessory models were given change variable name
             accessory_models = args.accessory
 
 
 
     mandatory_names = __read_hmms__(mandatory_models)
 
-    if args.accessory == True or args.t6ss == True:
+    if args.accessory is not None or args.t6ss == True:
         accessory_names = __read_hmms__(accessory_models)
 
     number_clusters_in_strain = 0
@@ -1192,7 +1193,7 @@ def main():
         min_genes_num = args.min_genes
         genes_gap_num = args.genes_gap
         mandatory_models = args.mandatory
-        if args.accessory == True: # if accessory models were given change variable name
+        if args.accessory is not None: # if accessory models were given change variable name
             accessory_models = args.accessory
 
 
@@ -1209,7 +1210,7 @@ def main():
 
     mandatory_names = __read_hmms__(mandatory_models)
 
-    if args.accessory == True or args.t6ss == True:
+    if args.accessory is not None or args.t6ss == True:
         accessory_names = __read_hmms__(accessory_models)
 
 
@@ -1242,7 +1243,7 @@ def main():
 
 
 
-    if args.accessory == True or args.t6ss == True:
+    if args.accessory is not None or args.t6ss == True:
 
         with open(output_dir+"/log_file.txt", "w") as output:
             output.write("""--------------------HaMBURGER--------------------

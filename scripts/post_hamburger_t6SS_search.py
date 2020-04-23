@@ -350,7 +350,7 @@ def main():
         sys.exit()
 
     if __is_tool__("fasttree") == False and __is_tool__("FastTree") == False:
-        print("Please install muscle. Exiting script.")
+        print("Please install fasttree before running hamburger. Exiting script.")
         sys.exit()
 
     elif __is_tool__("fasttree") == True:
