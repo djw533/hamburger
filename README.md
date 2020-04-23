@@ -2,16 +2,22 @@
 
 HMmer Based UndeRstandinG of gene clustERs
 
-A tool to extract and analyse contiguous sets of genes in bacterial genomes, given a concatenated set of protein hidden markov models (HMMs). Written in python3
+A tool to extract and analyse contiguous sets of genes in bacterial genomes, given a concatenated set of protein hidden markov models (HMMs). Written in python 3 and R (for T6SS filtering/grouping)
 
 
 ![Schematic for hamburger](https://raw.githubusercontent.com/djw533/hamburger/master/schematic/hamburger_schematic.png)
 
 
-Hamburger uses sets of concatenated HMMs to search for sets of genes co-localised in a genome, using annotated gffs as input (ideally from prokka).
+Hamburger uses sets of concatenated HMMs to search for sets of genes co-localised in a genome, using gff3 files as input. Input gff3 files need both the annotation, and fasta sequence (preceded by ##FASTA in the file, as produced by prokka)
 
 Hamburger can be used as follows - where < > denotes user specific addresses/input:
 
+Firstly cloning the git repository using git clone (into desired local directory)
+```
+git clone https://www.github.com/djw533/hamburger
+```
+
+Then running hamburger to search using a set of HMMs concatenated into a single file
 ```
 python <hamburger_directory>/scripts/hamburger.py -g *.gff -i <concatenated set of hmms.hmm> -o <new output directory to write in> -m <minimum number of genes needed to report gene cluster> -l <max permitted gap of non-model genes between genes of interest>
 ```
@@ -31,11 +37,13 @@ The following dependencies are required:
 System:
 ```
 HMMER
+Python 3
 ```
 (and for T6SS subtyping):
 ```
 Muscle
 Fasttree
+R
 ```
 
 Python libraries:
