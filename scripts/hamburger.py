@@ -307,6 +307,9 @@ def __gff_splitter__(gff_file, output_dir):
     gff_lines = gff_data.readlines()
     gff_data.close()
 
+
+    if "##FASTA\n" not in gff_lines:
+        print("Couldn't find the fasta sequence in {gff_file} Please use gff3 format otherwise Hamburger will not work".format(gff_file=gff_file))
     fasta_target = gff_lines.index('##FASTA\n')
 
     annotation_lines = gff_lines[:fasta_target]
