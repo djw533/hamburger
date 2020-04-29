@@ -209,7 +209,7 @@ write.csv(file = "cluster_stats_with_subtype.csv",
 ###########============== 3 - plot tree of tssBC with the subtypes  ===============##############
 
 ### plot tree with labeled clades
-g1 <- ggtree(groups_tree, ladderize = T, right = T, size=0.5, aes(color=group)) +
+g1 <- ggtree(groups_tree, ladderize = T, right = T, size=1, aes(color=group)) +
   scale_color_manual(values = c(cols)) +
   geom_treescale(x=0, y=0, offset = 1, width = 0.1, linesize = 0.5) +
   geom_cladelabel(node=clades_colours_names[1,]$node_num, label=clades_colours_names[1,]$name,
@@ -279,12 +279,14 @@ for (operon_num in unique(combined_genes$operon)) {
 
 
 ###### plot the operons to the right of the tree:
+max_length <- ((max(centred_complete_data$end) - min(centred_complete_data$start) ) / 2) / 1000
 
-facet_plot(g1, panel='Operons',
+
+facet1 <- facet_plot(g1, panel='Operons',
            mapping = aes(xmin = start, xmax = end, fill = gene, x=start, forward = direction, y=y),
-           data=centred_complete_data, color = "black", geom=geom_gene_arrow, size = 0.025,
-           arrow_body_height = grid::unit(0.15, "mm"), arrowhead_height = grid::unit(0.25, "mm"), arrowhead_width = grid::unit(0.25,"mm")) +
+           data=centred_complete_data, color = "black", geom=geom_gene_arrow, size = 1,#, 0.0025 * length(unique(centred_complete_data$operon)) , #use this if want to scale the line thickness on the gene arrows according to the number of tips in the tssBC tree
+           arrow_body_height = grid::unit(0.20, "cm"), arrowhead_height = grid::unit(0.25, "cm"), arrowhead_width = grid::unit(0.25,"cm")) +
   scale_fill_manual(values=c(tree_cols)) +
   # geom_treescale(width = 2, offset = -1.2) +
-  ggsave("tssBC_tree_with_T6SS_operons.png",dpi = 300, units = c("cm"), width = 40, height = 0.025 * length(unique(centred_complete_data$operon)), limitsize = F) +
-  ggsave("tssBC_tree_with_T6SS_operons.pdf",dpi = 300, units = c("cm"), width = 40, height = 0.025 * length(unique(centred_complete_data$operon)), limitsize = F)
+  ggsave("tssBC_tree_with_T6SS_operons.png",dpi = 300, units = c("cm"), width = max_length * 2, height = 0.3 * length(unique(centred_complete_data$operon)), limitsize = F) +
+  ggsave("tssBC_tree_with_T6SS_operons.pdf",dpi = 300, units = c("cm"), width = max_length * 2, height = 0.3 * length(unique(centred_complete_data$operon)), limitsize = F)

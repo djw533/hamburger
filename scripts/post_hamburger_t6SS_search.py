@@ -505,7 +505,7 @@ def main():
 
     #clean up :
     if args.keep_files is False:
-        os.system("rm */*_tssC.faa */*_tssB.faa all_observed_tssC.faa all_observed_tssB.faa all_observed_tssB_aligned.fasta all_observed_tssC_aligned.fasta tssBC_alignment.fasta tssBC_alignment.fasta.treefile Rplots.pdf")
+        os.system("rm */*_tssC.faa */*_tssB.faa all_observed_tssC.faa all_observed_tssB.faa all_observed_tssB_aligned.fasta all_observed_tssC_aligned.fasta tssBC_alignment.fasta tssBC_alignment.fasta.treefile")
         # for root, dirs, files in os.walk(strain_dir):
         #     print(dirs)
         #     print(files)
