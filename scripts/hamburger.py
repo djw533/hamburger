@@ -411,6 +411,13 @@ def extract_a2b(start_gene, stop_gene, annotation, strain, cluster_num, upstream
     Orientation should be either 'same', 'forward', or 'reverse' """
 
 
+
+    #check the contig size is long enough:
+    record = SeqIO.read("{output_dir}/{strain}/singlefastas/{contig}.fna".format(output_dir = output_dir, strain = strain, contig = contig), "fasta")
+    contig_length = len(record)
+
+
+
     ### creating list for the extracted annotation for later use:
     cluster_annotation = []
 
@@ -477,12 +484,29 @@ def extract_a2b(start_gene, stop_gene, annotation, strain, cluster_num, upstream
         gc_start = (int(start_index) - 1)
         gc_stop = int(stop_index)
 
+        #check if the contig is long enough:
+        if start < 0 :
+            start = 0
+        if stop > contig_length:
+            stop = contig_length
+
+
+
     elif result < 0:
         #print 'Hit is on the negative strand, redefining the start and stop indices'
         start = int(stop_index) - int(downstream)
         stop = (int(start_index) -1 ) + int(upstream)
         gc_start = int(stop_index)
         gc_stop = (int(start_index) -1 )
+
+
+        #again check if the contig is long enough: (and correct if not):
+        if start < 0 :
+            start = 0
+        if stop > contig_length:
+            stop = contig_length
+
+
 
     elif result == 0:
         print('Start and Stop are the same, break')
