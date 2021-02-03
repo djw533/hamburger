@@ -128,7 +128,7 @@ i5_clusters <- (get_subtree_at_node(groups_tree, nodes_and_names["i5"]-length(gr
 
 ##### append and print these all out:
 different_types <- list(i1_clusters,i2_clusters,i3_clusters,i4a_clusters,i4b_clusters,i5_clusters)
-names(different_types) <- c("i1","i2","i3","i4b","i4a","i5")
+names(different_types) <- c("i1","i2","i3","i4a","i4b","i5")
 
 
 all_types <- data.frame(matrix(nrow=0, ncol=2))
