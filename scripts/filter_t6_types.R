@@ -224,8 +224,8 @@ g1 <- ggtree(groups_tree, ladderize = T, right = T, size=1, aes(color=group)) +
                   color=clades_colours_names[5,]$color_hex, offset=0,align = T) +
   geom_cladelabel(node=clades_colours_names[6,]$node_num, label=clades_colours_names[6,]$name,
                   color=clades_colours_names[6,]$color_hex, offset=0,align = T) +
-  geom_rootedge(rootedge = 0.05) +
-  ggsave("tssBC_tree_with_types.png",dpi = 300)
+  geom_rootedge(rootedge = 0.05)
+ggsave("tssBC_tree_with_types.png",dpi = 300)
 
 
 ###########============== 4 - Draw tssBC tree with coloured gene clusters ===========##############
@@ -286,7 +286,7 @@ facet1 <- facet_plot(g1, panel='Operons',
            mapping = aes(xmin = start, xmax = end, fill = gene, x=start, forward = direction, y=y),
            data=centred_complete_data, color = "black", geom=geom_gene_arrow, size = 1,#, 0.0025 * length(unique(centred_complete_data$operon)) , #use this if want to scale the line thickness on the gene arrows according to the number of tips in the tssBC tree
            arrow_body_height = grid::unit(0.20, "cm"), arrowhead_height = grid::unit(0.25, "cm"), arrowhead_width = grid::unit(0.25,"cm")) +
-  scale_fill_manual(values=c(tree_cols)) +
+  scale_fill_manual(values=c(tree_cols))
   # geom_treescale(width = 2, offset = -1.2) +
-  ggsave("tssBC_tree_with_T6SS_operons.png",dpi = 300, units = c("cm"), width = max_length * 2, height = 0.3 * length(unique(centred_complete_data$operon)), limitsize = F) +
-  ggsave("tssBC_tree_with_T6SS_operons.pdf",dpi = 300, units = c("cm"), width = max_length * 2, height = 0.3 * length(unique(centred_complete_data$operon)), limitsize = F)
+ggsave("tssBC_tree_with_T6SS_operons.png",dpi = 300, units = c("cm"), width = max_length * 2, height = 0.3 * length(unique(centred_complete_data$operon)), limitsize = F)
+ggsave("tssBC_tree_with_T6SS_operons.pdf",dpi = 300, units = c("cm"), width = max_length * 2, height = 0.3 * length(unique(centred_complete_data$operon)), limitsize = F)
