@@ -17,7 +17,7 @@ from Bio import SeqIO
 from Bio.SeqUtils import GC
 import time
 from shutil import which
-
+import shutil
 
 ### multiprocessing
 import multiprocessing as mp
@@ -184,6 +184,8 @@ def __gff2faa__(gff_file, fasta_file, strain,output_dir):
     gff_file = input gff file
     fasta_file = output file
     output: a protein coding FASTA file '''
+
+
     out = open(output_dir+"/"+strain+"/tmp_fasta.fa", "w")
     contigs = {}
     list_of_names = {}
@@ -205,7 +207,19 @@ def __gff2faa__(gff_file, fasta_file, strain,output_dir):
             toks = line.strip().split("\t")
             if toks[2] != "CDS":
                 continue
-            true_name = toks[8].split("ID=")[1].split(";")[0]
+
+            #parse the details in the info column:
+            various_details = toks[8]
+
+            #check to see if ID there:
+            if "ID=" in toks[8]:
+                true_name = toks[8].split("ID=")[1].split(";")[0]
+            elif "locus_tag=" in toks[8]:
+                true_name = toks[8].split("locus_tag=")[1].split(";")[0]
+            else:
+                true_name = "No_name_set_{number}".format(number = str(counter))
+
+            #move on to set the hamburger/artificially set gene number (as integer) etc
             name = strain+'_'+str(counter)
             genes_and_contig[name] = toks[0]
             counter += 1
@@ -340,19 +354,26 @@ def __multifasta_to_singlefasta__(input_fasta, input_dir, output_dir):
 
     data = open("{input_dir}/{input_fasta}".format(input_dir = input_dir, input_fasta = input_fasta))
 
-    lines = data.readlines()
+    for record in SeqIO.parse("{input_dir}/{input_fasta}".format(input_dir = input_dir, input_fasta = input_fasta), "fasta"):
 
-    lines_string = ''.join(lines)
+        #print(record.seq)
 
-    entries_list = (''.join(lines)).split('>')
+        SeqIO.write(record, "{output_dir}/{name}.fna".format(output_dir = output_dir, name = record.id), "fasta")
 
-    for entry in entries_list:
-         name = entry.split('\n')[0]
-         ## going to try to just take the first part to the first break as the output name for the singlefasta.. (if there is more than one):
-         if len(name.split()) > 1:
-             name = name.split()[0]
-         with open("{output_dir}/{name}.fna".format(output_dir = output_dir, name = name), "w") as output:
-              output.write('>'+entry)
+    # lines = data.readlines()
+    #
+    # lines_string = ''.join(lines)
+    #
+    # entries_list = (''.join(lines)).split('>')
+    # print(len(entries_list))
+    #
+    # for entry in entries_list:
+    #      name = entry.split('\n')[0]
+    #      ## going to try to just take the first part to the first break as the output name for the singlefasta.. (if there is more than one):
+    #      if len(name.split()) > 1:
+    #          name = name.split()[0]
+    #      with open("{output_dir}/{name}.fna".format(output_dir = output_dir, name = name), "w") as output:
+    #           output.write('>'+entry)
 
 def __same_contigs_check__(gene_numbers, strain, genes_and_contig):
 
@@ -592,7 +613,16 @@ def __extract_gggenes_info__(cluster_annotation, named_genes,list_of_genes,start
             gg_start = str(line.split("\t")[3])
             gg_stop = str(line.split("\t")[4])
             strand = str(line.split("\t")[6])
-            id = line.split("\t")[8].split(';')[0].split("ID=")[1]
+
+
+            if "ID=" in line.split("\t")[8]:
+                id = line.split("\t")[8].split("ID=")[1].split(";")[0]
+            elif "locus_tag=" in line.split("\t")[8]:
+                id = line.split("\t")[8].split("locus_tag=")[1].split(";")[0]
+            else:
+                id = "No_name_set_{number}".format(number = str(counter))
+
+            #id = line.split("\t")[8].split(';')[0].split("ID=")[1]
             ## now get the new name assigned by hamburger:
             for new_name, old_name in list_of_genes.items():    # for name, age in dictionary.iteritems():  (for Python 2.x)
                 if old_name == id:
@@ -662,6 +692,7 @@ def __search_single_genome__(gff_file):
     number_contig_break_clusters_in_strain = 0
 
 
+
     output_dir = args.output
 
     #print(gff_file)
@@ -669,6 +700,7 @@ def __search_single_genome__(gff_file):
     ### take the strain name (last field from "_" separator and remove the .gff from the end:)
 
     strain = gff_file.split('/')[-1].replace(".gff","")
+    #print(strain)
 
     ### now made directory for this strain:
     strain_dir = "{output_dir}/{strain}".format(output_dir = output_dir, strain = strain)
@@ -721,6 +753,8 @@ def __search_single_genome__(gff_file):
 
 #5 - Cluster the HMMER hits according to the parameters
 
+    #print("here {strain}".format(strain=gff_file))
+
 
     if len(mandatory_hmmer_genes) == 0:
         ##no hits
@@ -728,7 +762,7 @@ def __search_single_genome__(gff_file):
             output.write("No hmmer hits in {strain}".format(strain =strain))
         ### and write to strain_statistics.csv
         with open(output_dir + "/"+strain+"/strain_statistics.csv","a") as output:
-            output.write("{strain},{clusters},{rejected_clusters}\n".format(strain=strain,clusters = "0",rejected_clusters = "0"))
+            output.write("{strain},{clusters},{rejected_clusters},{number_contig_break_clusters_in_strain}\n".format(strain=strain,clusters = "0",rejected_clusters = "0",number_contig_break_clusters_in_strain = number_contig_break_clusters_in_strain))
         return
 
     filtered_groups = __clustering_func__(total_hmmer_genes,genes_gap_num,min_genes_num)
@@ -749,6 +783,7 @@ def __search_single_genome__(gff_file):
     #if len(filtered_groups) == 0:
         #print("No gene clusters found")
         #continue
+
 
     for group in filtered_groups: # now getting into working with each gene cluster/gene cluster
         #print(group)
@@ -901,8 +936,8 @@ def __search_single_genome__(gff_file):
     with open(output_dir + "/"+strain+"/strain_statistics.csv","a") as output:
         output.write("{strain},{clusters},{rejected_clusters},{contig_break_clusters}\n".format(strain=strain,clusters = number_clusters_in_strain,rejected_clusters = number_rejected_clusters_in_strain,contig_break_clusters = number_contig_break_clusters_in_strain))
 
-
     ### remove singlefastas folder:
+    #print("{output_dir}/{strain}/singlefastas".format(output_dir=output_dir,strain=strain))
 
     os.system("rm -r {output_dir}/{strain}/singlefastas".format(output_dir=output_dir,strain=strain))
     os.system("rm  {output_dir}/{strain}/contigs.fna".format(output_dir=output_dir,strain=strain))
@@ -922,7 +957,9 @@ def __clean_up_files__(gff_file):
     ## faa file of the genome (used to find T6SS genes)
     ## gff files
     ## gggenes input
+
     for root, dirs, files in os.walk(strain_dir):
+        #remove the singlefastas directory:
         for file in files:
             if file.endswith(".gff"):
                 continue
@@ -934,7 +971,7 @@ def __clean_up_files__(gff_file):
                 continue
 
             else:
-                os.remove("{output_dir}/{strain}/{file}".format(output_dir = output_dir, strain = strain, file = file))
+                os.remove("{root}/{file}".format(root = root, file = file))
 
 
 
@@ -1173,7 +1210,6 @@ def __search_single_genome_no_accessory__(gff_file):
 
 
     ### remove singlefastas folder:
-
     os.system("rm -r {output_dir}/{strain}/singlefastas".format(output_dir=output_dir,strain=strain))
     os.system("rm  {output_dir}/{strain}/contigs.fna".format(output_dir=output_dir,strain=strain))
 
@@ -1350,9 +1386,44 @@ def main():
 
 #10 Now group all of the different statistics files together
 
-    os.system("cat {output_dir}/*/strain_statistics.csv >> {output_dir}/strain_statistics.csv".format(output_dir=output_dir))
-    os.system("cat {output_dir}/*/gggenes_input.csv >> {output_dir}/gggenes_input.csv".format(output_dir=output_dir))
-    os.system("cat {output_dir}/*/cluster_stats.csv >> {output_dir}/cluster_stats.csv".format(output_dir=output_dir))
+
+    ##now go through these and concatenate files to lists to then be concatenated if they exist:
+    statistics_files  = []
+    gggenes_input_files = []
+    cluster_stats_files = []
+
+    strain_names_from_gff_files  = [gff_file.split('/')[-1] for gff_file in gff_files]
+
+
+    for dirpath, dirnames, filenames in os.walk(output_dir):
+        #check if the directory is in the gff files list
+        if "{cut_dirpath}.gff".format(cut_dirpath = dirpath.split('/')[-1]) in strain_names_from_gff_files:
+            # now established that it's a correct directory , take the strain_statistics file, the gggenes_input file and the cluster_stats files (if they're there)
+            if "strain_statistics.csv" in filenames:
+                statistics_files.append("{dirpath}/strain_statistics.csv".format(dirpath = dirpath))
+            if "gggenes_input.csv" in filenames:
+                gggenes_input_files.append("{dirpath}/gggenes_input.csv".format(dirpath = dirpath))
+            if "cluster_stats.csv" in filenames:
+                cluster_stats_files.append("{dirpath}/cluster_stats.csv".format(dirpath = dirpath))
+
+    #now check that gggenes_input_files and cluster_stats_files lists aren't empty:
+
+    if len(gggenes_input_files) == 0 or len(cluster_stats_files) == 0 :
+
+        if args.t6ss == True:
+            print("No T6SSs found.")
+        else:
+            print("No gene clusters found.")
+
+        ## now cat all the strain statistics files:
+        os.system("cat {statistics_files} >> {output_dir}/strain_statistics.csv".format(statistics_files = ' '.join(statistics_files), output_dir=output_dir))
+
+
+    else:
+
+        os.system("cat {statistics_files} >> {output_dir}/strain_statistics.csv".format(statistics_files = ' '.join(statistics_files), output_dir=output_dir))
+        os.system("cat {gggenes_input_files} >> {output_dir}/gggenes_input.csv".format(gggenes_input_files = ' '.join(gggenes_input_files), output_dir=output_dir))
+        os.system("cat {cluster_stats_files} >> {output_dir}/cluster_stats.csv".format(cluster_stats_files = ' '.join(cluster_stats_files), output_dir=output_dir))
 
 
 #10 - Cleanup:
