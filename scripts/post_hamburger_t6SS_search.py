@@ -3,6 +3,7 @@
 import os, time, multiprocessing
 from shutil import which
 import sys
+import os.path
 
 
 
@@ -400,7 +401,22 @@ def main():
     # if args.tree_building == "fasttree":
 
 
+    # check to see if no T6SSs were found:
+    if os.path.isfile("{dir}/strain_statistics.csv".format(dir = args.input_dir)):
+        strain_stats = open("{dir}/strain_statistics.csv".format(dir = args.input_dir))
+        strain_data = strain_stats.readlines()
+        strain_stats.close()
+    else:
+        sys.exit("No strain_statistics.csv file in {dir}".format(dir = args.input_dir))
 
+
+    #now check:
+    num_T6SSs_found = 0
+    for line in strain_data[1:]:
+        num_T6SSs_found += int(line.split(',')[1]) # add the number of T6SSs found in each strain statistics file
+
+    if num_T6SSs_found == 0:
+        sys.exit("No T6SSs were found in the previous hamburger run. Therefore any T6SS typing is not possible. Exiting.")
 
 
     list_of_dirs = []
@@ -410,11 +426,15 @@ def main():
         # if first_search == True:
         #     first_search == False # set this so that we don't just take the root file:
         #     continue # don't want to include the root directory name
+        if r.endswith("singlefastas"):
+            continue
         list_of_dirs.append(r)
 
+    print(list_of_dirs)
 
     list_of_dirs = list_of_dirs[1:]
 
+    print(list_of_dirs)
 
     if int(args.num_threads) > 1:
         num_threads_for_muscle = 2
