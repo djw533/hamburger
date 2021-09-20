@@ -55,7 +55,7 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
     else:
         # continue using the gff file that is passed across
         ### take the strain name (last field from "_" separator and remove the .gff from the end:)
-        print(gff_file)
+        #print(gff_file)
         strain = gff_file.split('/')[-1].replace(".gff","")
 
         ### now made directory for this strain:

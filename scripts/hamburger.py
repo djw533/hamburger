@@ -247,6 +247,7 @@ def main():
                 if gff.endswith(".gff") == False:
                     sys.exit("Please make sure all gff files end with .gff")
 
+            args.fasta = [None] * len(args.gff)
             strain_names = [filename.split('/')[-1].replace(".gff","") for filename in args.gff] # set strain names to iterate over
 
         except:
