@@ -25,11 +25,15 @@ def clustering_func(numbers_list,max_gap,groupsize_min):
     return filtered_groups
 
 
-def same_contigs_check(gene_numbers, strain, genes_and_contig):
+def same_contigs_check(gene_numbers, strain, genes_and_contig,reformat_numbers = True):
 
     contigs = []
 
+    #create dictionary for each contig with the genes on each contig
+    new_groups = {}
+
     for num in gene_numbers:
+
         gene = "{strain}_{num}".format(strain = strain, num = str(num)) # covert the number back into the format in the annotation
 
         ### get the contig:
@@ -37,12 +41,25 @@ def same_contigs_check(gene_numbers, strain, genes_and_contig):
 
         contigs.append(contig)
 
+        #check if contig already in new_groups
+        if contig not in new_groups:
+            new_groups[contig] = []
+            if reformat_numbers:
+                new_groups[contig].append(gene)
+            else:
+                new_groups[contig].append(num)
+        else:
+            if reformat_numbers:
+                new_groups[contig].append(gene)
+            else:
+                new_groups[contig].append(num)
+
     ### check if all the contigs are the same:
     if all(x == contigs[0] for x in contigs) == True:
         return(True, contig)
 
     else:
-        return(False, "No contig")
+        return(False, new_groups)
 
 
 def gene_names_in_cluster(gene_num_in_cluster, hmmer_output, strain):

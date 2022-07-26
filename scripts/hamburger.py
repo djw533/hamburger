@@ -147,6 +147,10 @@ def parseArgs():
                 '--itol',
                 action='store_true',
                 help='Create itol output for number of T6SSs and subtypes per strain')
+        parser.add_argument('-w',
+			    '--overwrite',
+			    action='store_true',
+			    help="Overwrite existing blast database directory")
 
     except:
         print("An exception occurred with argument parsing. Check your provided options.")
@@ -258,9 +262,16 @@ def main():
         sys.exit("Please provide either fasta or gff files (or both) as input. Exiting.")
 
 
-    ### make new output directory first:
+    ### check whether output directory already exists, overwrite if specified
+
+    try:
+        tool_check.check_output_dir(args.output,
+                                args.overwrite)
+    except ValueError as e:
+        sys.exit("{dir} exists. Set -w to overwrite".format(dir = args.output))
+
     output_dir = args.output
-    os.makedirs(output_dir)
+    # os.makedirs(output_dir)
 
 
 ##### steps Required

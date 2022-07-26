@@ -96,8 +96,8 @@ def extract_a2b(start_gene, stop_gene, annotation, strain, cluster_num, upstream
             id = gff_line.split("\t")[8].split(";")[0].split("=")[1]
 
             if id == start_gene:
-                feature_start = gff_line.split('\t')[3]
-                feature_stop = gff_line.split('\t')[4]
+                feature_start = int(gff_line.split('\t')[3])
+                feature_stop = int(gff_line.split('\t')[4])
                 start_index = min(feature_start, feature_stop)
                 stop_index = max(feature_start, feature_stop)
                 start_got = True
@@ -113,8 +113,8 @@ def extract_a2b(start_gene, stop_gene, annotation, strain, cluster_num, upstream
             id = gff_line.split("\t")[8].split(";")[0].split("=")[1]
 
             if id == start_gene:
-                feature_start = gff_line.split('\t')[3]
-                feature_stop = gff_line.split('\t')[4]
+                feature_start = int(gff_line.split('\t')[3])
+                feature_stop = int(gff_line.split('\t')[4])
                 if orientation == "forward":
                     start_index = min(feature_start, feature_stop)
                 elif orientation == "reverse":
@@ -122,14 +122,15 @@ def extract_a2b(start_gene, stop_gene, annotation, strain, cluster_num, upstream
                 start_got = True
 
             elif id == stop_gene:
-                feature_start = gff_line.split('\t')[3]
-                feature_stop = gff_line.split('\t')[4]
+                feature_start = int(gff_line.split('\t')[3])
+                feature_stop = int(gff_line.split('\t')[4])
                 stop_index = min(feature_start, feature_stop)
                 if orientation == "forward":
                     stop_index = max(feature_start, feature_stop)
                 elif orientation == "reverse":
                     stop_index = min(feature_start, feature_stop)
                 stop_got = True
+
 
             elif stop_got == True and start_got == True:
                 continue

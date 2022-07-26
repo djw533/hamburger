@@ -70,6 +70,10 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
     if accessory_models is not None or t6ss == True:
         accessory_names = hmmer_functions.read_hmms(accessory_models)
 
+
+
+
+    # set number of clusters found at 0, and update as process through the genome
     number_clusters_in_strain = 0
     number_rejected_clusters_in_strain = 0
     number_contig_break_clusters_in_strain = 0
@@ -118,6 +122,26 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
         total_hmmer_output = mandatory_hmmer_output
         total_hmmer_genes = mandatory_hmmer_genes
 
+
+
+    #write out the hmmer results?
+    if keep_files == True:
+
+        open("{dir}/hmmer_results.csv".format(
+            dir = output_dir
+            ), "w")
+
+        with open("{dir}/hmmer_results.csv".format(
+            dir = output_dir
+            ), "a") as f:
+
+            for t in total_hmmer_output:
+                gene = list_of_genes[t.split()[0]]
+                model = t.split()[2]
+                f.write(gene+","+model+"\n")
+
+
+
 #5 - Cluster the HMMER hits according to the parameters
 
     #print("here {strain}".format(strain=gff_file))
@@ -134,8 +158,21 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
 
     filtered_groups = filter.clustering_func(total_hmmer_genes,genes_gap_num,min_genes_num)
 
+
 #6 - Check that clusters are on the the same contigs
 
+    # correct these groups if there are contig breaks in each of the groups
+    for group in filtered_groups:
+        contig_check =  filter.same_contigs_check(group, strain, genes_and_contig, reformat_numbers = False)
+
+        if contig_check[0] == False:
+            #hits are spread across more than one contig - take each group and add it to filtered_groups
+            filtered_groups.remove(group)
+            for contig, genes in contig_check[1].items():
+                filtered_groups.append(genes)
+
+
+#7 - go through each group and check whether the number of mandatory genes there is correct
 
     # print(annotation) # lines of the annotation from the gff file
     # print(filtered_groups) # list of lists for each gene cluster from the (simple) algorithm
@@ -152,11 +189,11 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
         #continue
 
     for group in filtered_groups: # now getting into working with each gene cluster/gene cluster
-        #print(group)
+        print(group)
         ## make name
 
         contig_check =  filter.same_contigs_check(group, strain, genes_and_contig)
-        #print(contig_check)
+        print(contig_check)
 
         if contig_check[0] == False:
             ### the hits are spread across more than one contigs
@@ -224,15 +261,22 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
         max_gene = list_of_genes[strain+"_"+str(max(group))]
 
         ## get orientation, or if single gene:
-        if min_gene == max_gene:
+        # if min_gene == max_gene:
+        #     orientation = "same"
+        # elif min_gene < max_gene:
+        #     orientation = "forward"
+        # elif min_gene > max_gene:
+        #     orientation = "reverse"
+
+        if min(group) == max(group):
             orientation = "same"
-        elif min_gene < max_gene:
+        elif min(group) < max(group):
             orientation = "forward"
-        elif min_gene > max_gene:
+        elif min(group) > max(group):
             orientation = "reverse"
 
-
         extraction_details = extract.extract_a2b(min_gene, max_gene, annotation, strain, str(counter), upstream, downstream, contig, output_dir,orientation)
+
 
         GC_cluster = extraction_details[0]
         cluster_start = extraction_details[1]
