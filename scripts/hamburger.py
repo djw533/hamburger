@@ -151,6 +151,12 @@ def parseArgs():
 			    '--overwrite',
 			    action='store_true',
 			    help="Overwrite existing blast database directory")
+        parser.add_argument('-v',
+			    '--version',
+			    action='store_true',
+			    help="Print version and exit")
+
+
 
     except:
         print("An exception occurred with argument parsing. Check your provided options.")
@@ -164,15 +170,19 @@ def parseArgs():
 def main():
 
 
+    start = time.time()
+    args = parseArgs()
+
+
+    if args.version:
+        print("Hamburger version 0.2.0")
+        sys.exit()
+
     ## check if hmmsearch is installed:
 
     if tool_check.is_tool("hmmsearch") == False:
         print("Please install hmmer before running hamburger")
         sys.exit()
-
-
-    start = time.time()
-    args = parseArgs()
 
 
 
