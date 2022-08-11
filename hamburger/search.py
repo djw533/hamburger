@@ -189,11 +189,11 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
         #continue
 
     for group in filtered_groups: # now getting into working with each gene cluster/gene cluster
-        print(group)
+        #print(group)
         ## make name
 
         contig_check =  filter.same_contigs_check(group, strain, genes_and_contig)
-        print(contig_check)
+        #print(contig_check)
 
         if contig_check[0] == False:
             ### the hits are spread across more than one contigs
