@@ -104,8 +104,8 @@ def extract_a2b(start_gene, stop_gene, annotation, strain, cluster_num, upstream
     """ Take sequence and annotation from gff3 files between genomic point A and B, given both base indices
     Orientation should be either 'same', 'forward', or 'reverse' """
 
-    print(start_gene)
-    print(stop_gene)
+    #print(start_gene)
+    #print(stop_gene)
 
 
     #check the contig size is long enough:
