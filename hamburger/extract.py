@@ -2,8 +2,11 @@
 from Bio import SeqIO
 from Bio.SeqUtils import GC
 
+from Bio.Seq import translate
+from Bio.Seq import reverse_complement
 
-def extract_gggenes_info(cluster_annotation, named_genes,list_of_genes,start,stop,strain,output_dir,cluster_num):
+
+def extract_gggenes_info(cluster_annotation, named_genes,list_of_genes,start,stop,strain,output_dir,cluster_num,protein = True):
 
     ###match the gene names back to what they are in the annotation
 
@@ -20,13 +23,13 @@ def extract_gggenes_info(cluster_annotation, named_genes,list_of_genes,start,sto
     for line in cluster_annotation:
         if line.split("\t")[2] == "CDS":
 
-
             ## update counter:
             gg_number += 1
 
             gg_start = str(line.split("\t")[3])
             gg_stop = str(line.split("\t")[4])
             strand = str(line.split("\t")[6])
+            prot_seq = str(line.split("\t")[9])
 
 
             if "ID=" in line.split("\t")[8]:
@@ -59,8 +62,37 @@ def extract_gggenes_info(cluster_annotation, named_genes,list_of_genes,start,sto
 
 
             #output to a list:
-            gggenes_output.append("{cluster},{number},{start},{end},{gene},{strand},{direction},{strain},{id},{new_name}".format(cluster = strain+"_cluster_"+cluster_num,number = gg_number, gene = model_name, start = gg_start, end = gg_stop, strand = gg_strand, direction = gg_direction, strain = strain, id = id, new_name  = hamburger_assigned_id))
+            if protein == False:
+                append_line = "{cluster},{number},{start},{end},{gene},{strand},{direction},{strain},{id},{new_name}".format(
+                    cluster = strain+"_cluster_"+cluster_num,
+                    number = gg_number,
+                    gene = model_name,
+                    start = gg_start,
+                    end = gg_stop,
+                    strand = gg_strand,
+                    direction = gg_direction,
+                    strain = strain,
+                    id = id,
+                    new_name  = hamburger_assigned_id
+                 )
 
+            elif protein == True:
+                append_line = "{cluster},{number},{start},{end},{gene},{strand},{direction},{strain},{id},{new_name},{protein}".format(
+                    cluster = strain+"_cluster_"+cluster_num,
+                    number = gg_number,
+                    gene = model_name,
+                    start = gg_start,
+                    end = gg_stop,
+                    strand = gg_strand,
+                    direction = gg_direction,
+                    strain = strain,
+                    id = id,
+                    new_name  = hamburger_assigned_id,
+                    protein = prot_seq.strip()
+                 )
+
+
+            gggenes_output.append(append_line)
 
     ## return the list
 
@@ -72,6 +104,8 @@ def extract_a2b(start_gene, stop_gene, annotation, strain, cluster_num, upstream
     """ Take sequence and annotation from gff3 files between genomic point A and B, given both base indices
     Orientation should be either 'same', 'forward', or 'reverse' """
 
+    print(start_gene)
+    print(stop_gene)
 
 
     #check the contig size is long enough:
@@ -192,9 +226,19 @@ def extract_a2b(start_gene, stop_gene, annotation, strain, cluster_num, upstream
             new_list.insert(3, str(int(feature_start) - start))
             new_list.insert(4, str(int(feature_stop) - start))
             linegff3 = "\t".join(new_list)
+
+            #extract the protein sequence as well:
+            strand = gff_line.split("\t")[6]
+            if strand == "+":
+                prot_seq = str(translate(record.seq[int(feature_start) - 1:int(feature_stop)]))
+            elif strand == "-":
+                prot_seq = str(translate(reverse_complement(record.seq[int(feature_start) - 1 :int(feature_stop)])))
+
+
+
             with open("{output_dir}/{strain}/{strain}_cluster_{cluster_num}.gff".format(output_dir = output_dir, strain = strain, cluster_num = cluster_num), "a") as output:
                 output.write(linegff3)
-                cluster_annotation.append(linegff3) ### append only the cluster annotation for later gggenes input csv creation
+                cluster_annotation.append(linegff3.strip("\n") + "\t" + prot_seq + "\n") ### append only the cluster annotation for later gggenes input csv creation
                 output.write("\n") ####### have removed the newline character "\n"
 
         else:

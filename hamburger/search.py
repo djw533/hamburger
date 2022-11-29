@@ -3,6 +3,7 @@
 
 import os
 import sys
+import shutil
 
 #import functions within this directory
 from hamburger import extract
@@ -18,7 +19,7 @@ hmmsearch='hmmsearch'
 
 
 
-def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_gap_num,upstream,downstream,cutoff,t6ss,output_dir,keep_files,gff_file,fasta_file):
+def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_gap_num,upstream,downstream,cutoff,t6ss,output_dir,keep_files,keep_gffs,gff_file,fasta_file):
 
 
     # # if no gff file supplied then run prodigal and create the gff file
@@ -147,17 +148,23 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
     #print("here {strain}".format(strain=gff_file))
 
 
+    strain_stats = []
+    gggenes_input = []
+    cluster_stats = []
+
+
     if len(mandatory_hmmer_genes) == 0:
         ##no hits
         with open(output_dir+"/log_file.txt", "a") as output:
             output.write("No hmmer hits in {strain}".format(strain =strain))
         ### and write to strain_statistics.csv
-        with open(output_dir + "/"+strain+"/strain_statistics.csv","a") as output:
-            output.write("{strain},{clusters},{rejected_clusters},{number_contig_break_clusters_in_strain}\n".format(strain=strain,clusters = "0",rejected_clusters = "0",number_contig_break_clusters_in_strain = number_contig_break_clusters_in_strain))
-        return
+        #with open(output_dir + "/"+strain+"/strain_statistics.csv","a") as output:
+            #output.write(
+        strain_stats.append("{strain},{clusters},{rejected_clusters},{number_contig_break_clusters_in_strain}".format(strain=strain,clusters = "0",rejected_clusters = "0",number_contig_break_clusters_in_strain = number_contig_break_clusters_in_strain))
+        # output_lists = (gggenes_input,strain_stats,cluster_stats)
+        # return(output_lists)
 
     filtered_groups = filter.clustering_func(total_hmmer_genes,genes_gap_num,min_genes_num)
-
 
 #6 - Check that clusters are on the the same contigs
 
@@ -172,6 +179,7 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
                 filtered_groups.append(genes)
 
 
+
 #7 - go through each group and check whether the number of mandatory genes there is correct
 
     # print(annotation) # lines of the annotation from the gff file
@@ -182,11 +190,11 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
 
     ##set counter for the number of the gene cluster
     counter = 0
-
     #### check to see if there are no gene clusters that are reported:
-    #if len(filtered_groups) == 0:
-        #print("No gene clusters found")
-        #continue
+    if len(filtered_groups) == 0:
+        strain_stats.append("{strain},{clusters},{rejected_clusters},{number_contig_break_clusters_in_strain}".format(strain=strain,clusters = "0",rejected_clusters = "0",number_contig_break_clusters_in_strain = number_contig_break_clusters_in_strain))
+        # output_lists = (gggenes_input,strain_stats,cluster_stats)
+        # return(output_lists)
 
     for group in filtered_groups: # now getting into working with each gene cluster/gene cluster
         #print(group)
@@ -196,6 +204,7 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
         #print(contig_check)
 
         if contig_check[0] == False:
+
             ### the hits are spread across more than one contigs
 
             with open(output_dir+"/log_file.txt", "a") as output:
@@ -208,7 +217,6 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
 
         elif contig_check[0] == True: # if true, hits are on a single contig
 
-
             contig = contig_check[1] # store the name of the contig
             #update counter
 
@@ -220,7 +228,6 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
 
                 ### now associate each hit with the hmmer output to get the number of queries that were satisfied from the mandatory, concatenated hmm model
                 mandatory_genes_in_cluster = filter.gene_names_in_cluster(mandatory_in_cluster, mandatory_hmmer_output, strain)
-
 
                 #get the names of the accessory genes for later:
                 accessory_in_cluster =  [x for x in group if x not in mandatory_hmmer_genes]
@@ -245,8 +252,9 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
                 if len(mandatory_genes_in_cluster) < int(min_genes_num):
                 #    print("Not enough unique mandatory genes in the cluster found, not reporting gene cluster")
 
-                    continue
+                    number_rejected_clusters_in_strain += 1
 
+                    continue
 
 #7 - Extract the gff subsequence - with and without the extra sequences
 
@@ -312,14 +320,59 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
                 else:
                     list_of_accessory.append(str(len(accessory_genes_in_cluster[gene])))
 
+
         #### start creating the output:
         if accessory_models:
-            with open(output_dir+"/"+strain+"/cluster_stats.csv", "a") as output:
-                output.write("""{strain}_cluster_{counter},{strain},{contig},{start_on_contig},{stop_on_contig},{length},{number_of_mandatory_genes},{found_number_of_mandatory_genes},{percent_of_mandatory_genes_in_query},{number_of_accessory_genes},{found_number_of_accessory_genes},{percent_of_accessory_genes_in_query},{hmm_genes},{GC_cluster},{GC_genome},{GCoperonbyGCgenome}\n""".format(strain=strain,counter=str(counter),contig=contig,start_on_contig=str(cluster_start),stop_on_contig=str(cluster_stop),length=abs(int(length_of_operon)),number_of_mandatory_genes=len(mandatory_names),found_number_of_mandatory_genes=len(mandatory_genes_in_cluster),percent_of_mandatory_genes_in_query=(float(len(mandatory_genes_in_cluster))/float(len(mandatory_names)))*100,number_of_accessory_genes=len(accessory_names),found_number_of_accessory_genes=len(accessory_genes_in_cluster),percent_of_accessory_genes_in_query=(float(len(accessory_genes_in_cluster))/float(len(accessory_names)))*100,hmm_genes=','.join(list_of_mandatory+list_of_accessory),GC_cluster=GC_cluster,GC_genome=GC_genome,GCoperonbyGCgenome=str(GC_cluster/GC_genome)))
+            #with open(output_dir+"/"+strain+"/cluster_stats.csv", "a") as output:
+                #output.write(
+            cluster_stats.append(
+                "{strain}_cluster_{counter},{strain},{contig},{start_on_contig},\
+{stop_on_contig},{length},{number_of_mandatory_genes},{found_number_of_mandatory_genes},\
+{percent_of_mandatory_genes_in_query},{number_of_accessory_genes},\
+{found_number_of_accessory_genes},{percent_of_accessory_genes_in_query},\
+{hmm_genes},{GC_cluster},{GC_genome},{GCoperonbyGCgenome}".format(
+                    strain=strain,
+                    counter=str(counter),
+                    contig=contig,
+                    start_on_contig=str(cluster_start),
+                    stop_on_contig=str(cluster_stop),
+                    length=abs(int(length_of_operon)),
+                    number_of_mandatory_genes=len(mandatory_names),
+                    found_number_of_mandatory_genes=len(mandatory_genes_in_cluster),
+                    percent_of_mandatory_genes_in_query=(float(len(mandatory_genes_in_cluster))/float(len(mandatory_names)))*100,
+                    number_of_accessory_genes=len(accessory_names),
+                    found_number_of_accessory_genes=len(accessory_genes_in_cluster),
+                    percent_of_accessory_genes_in_query=(float(len(accessory_genes_in_cluster))/float(len(accessory_names)))*100,
+                    hmm_genes=','.join(list_of_mandatory+list_of_accessory),
+                    GC_cluster=GC_cluster,
+                    GC_genome=GC_genome,
+                    GCoperonbyGCgenome=str(GC_cluster/GC_genome)
+                    )
+                )
 
         else:
-            with open(output_dir+"/"+strain+"/cluster_stats.csv", "a") as output:
-                output.write("""{strain}_cluster_{counter},{strain},{contig},{start_on_contig},{stop_on_contig},{length},{number_of_mandatory_genes},{found_number_of_mandatory_genes},{percent_of_mandatory_genes_in_query},{hmm_genes},{GC_cluster},{GC_genome},{GCoperonbyGCgenome}\n""".format(strain=strain,counter=str(counter),contig=contig,start_on_contig=str(cluster_start),stop_on_contig=str(cluster_stop),length=abs(int(length_of_operon)),number_of_mandatory_genes=len(mandatory_names),found_number_of_mandatory_genes=len(mandatory_genes_in_cluster),percent_of_mandatory_genes_in_query=(float(len(mandatory_genes_in_cluster))/float(len(mandatory_names)))*100,hmm_genes=','.join(list_of_mandatory),GC_cluster=GC_cluster,GC_genome=GC_genome,GCoperonbyGCgenome=str(GC_cluster/GC_genome)))
+            #with open(output_dir+"/"+strain+"/cluster_stats.csv", "a") as output:
+                #output.write(
+            cluster_stats.append(
+                "{strain}_cluster_{counter},{strain},{contig},\
+{start_on_contig},{stop_on_contig},{length},{number_of_mandatory_genes},\
+{found_number_of_mandatory_genes},{percent_of_mandatory_genes_in_query},\
+{hmm_genes},{GC_cluster},{GC_genome},{GCoperonbyGCgenome}".format(
+                    strain=strain,
+                    counter=str(counter),
+                    contig=contig,
+                    start_on_contig=str(cluster_start),
+                    stop_on_contig=str(cluster_stop),
+                    length=abs(int(length_of_operon)),
+                    number_of_mandatory_genes=len(mandatory_names),
+                    found_number_of_mandatory_genes=len(mandatory_genes_in_cluster),
+                    percent_of_mandatory_genes_in_query=(float(len(mandatory_genes_in_cluster))/float(len(mandatory_names)))*100,
+                    hmm_genes=','.join(list_of_mandatory),
+                    GC_cluster=GC_cluster,
+                    GC_genome=GC_genome,
+                    GCoperonbyGCgenome=str(GC_cluster/GC_genome)
+                )
+            )
 
 
         ####now work out and write out the input for gggenes:
@@ -335,20 +388,37 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
 
         ### now run a function to extract the gggenes information
 
-        gggenes_input = extract.extract_gggenes_info(cluster_annotation, all_genes_in_cluster,list_of_genes, extended_start, extended_stop, strain, output_dir, str(counter))
+        gggenes_input_temp = extract.extract_gggenes_info(
+            cluster_annotation,
+            all_genes_in_cluster,
+            list_of_genes,
+            extended_start,
+            extended_stop,
+            strain,
+            output_dir,
+            str(counter)
+        )
 
+        # with open(output_dir+"/"+strain+"/gggenes_input.csv","a") as output:
+        #     for line in gggenes_input:
+        #         output.write(line+"\n")
 
-
-        with open(output_dir+"/"+strain+"/gggenes_input.csv","a") as output:
-            for line in gggenes_input:
-                output.write(line+"\n")
-
-
+        gggenes_input.extend(gggenes_input_temp)
 
 
     ####### record number of clusters / strain:
-    with open(output_dir + "/"+strain+"/strain_statistics.csv","a") as output:
-        output.write("{strain},{clusters},{rejected_clusters},{contig_break_clusters}\n".format(strain=strain,clusters = number_clusters_in_strain,rejected_clusters = number_rejected_clusters_in_strain,contig_break_clusters = number_contig_break_clusters_in_strain))
+
+    # with open(output_dir + "/"+strain+"/strain_statistics.csv","a") as output:
+    #     output.write(
+    strain_stats = [
+        "{strain},{clusters},{rejected_clusters},{contig_break_clusters}".format(
+            strain=strain,
+            clusters = number_clusters_in_strain,
+            rejected_clusters = number_rejected_clusters_in_strain,
+            contig_break_clusters = number_contig_break_clusters_in_strain
+        )
+    ]
+
 
     ### remove singlefastas folder:
     #print("{output_dir}/{strain}/singlefastas".format(output_dir=output_dir,strain=strain))
@@ -357,5 +427,30 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
     os.system("rm  {output_dir}/{strain}/contigs.fna".format(output_dir=output_dir,strain=strain))
 
 
+    if keep_gffs is True:
+        #clean.clean_up_files("{output_dir}/{strain}".format(output_dir=output_dir,strain=strain), strain)
+        #move gff file
+        for root, dirs, files in os.walk("{output_dir}/{strain}".format(output_dir=output_dir,strain=strain)):
+            for file in files:
+                if file.endswith(".gff"):
+                    shutil.move(
+                        "{output_dir}/{strain}/{file}".format(
+                            output_dir = output_dir,
+                            strain = strain,
+                            file = file),
+                        "{output_dir}/extracted_gff_regions/{file}".format(
+                            output_dir = output_dir,
+                            strain = strain,
+                            file = file)
+                    )
+
     if keep_files is False:
         clean.clean_up_files("{output_dir}/{strain}".format(output_dir=output_dir,strain=strain), strain)
+        #remove directory
+        shutil.rmtree("{output_dir}/{strain}".format(output_dir=output_dir,strain=strain))
+
+
+    #return gggenes, strain stats and cluster stats:
+    output_lists = (gggenes_input,strain_stats,cluster_stats)
+
+    return(output_lists)

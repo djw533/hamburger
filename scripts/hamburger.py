@@ -26,7 +26,7 @@ from hamburger import tool_check
 from hamburger import search
 from hamburger import run_prodigal
 from hamburger import istarmap
-
+from hamburger import filter_t6_types
 
 #import multiprocessing
 from multiprocessing import Pool
@@ -151,6 +151,10 @@ def parseArgs():
 			    '--overwrite',
 			    action='store_true',
 			    help="Overwrite existing blast database directory")
+        parser.add_argument('-s',
+			    '--save_gffs',
+			    action='store_true',
+			    help="Save output gff files")
         parser.add_argument('-v',
 			    '--version',
 			    action='store_true',
@@ -188,8 +192,8 @@ def main():
 
     ### if t6ss flag requested then set these using the t6ss default setting
     if args.t6ss == True:
-        min_genes_num = 8
-        genes_gap_num = 12
+        min_genes_num = args.min_genes
+        genes_gap_num = args.genes_gap
         args.mandatory = T6SS_core#"/home/djwilliams/github/hamburger/models/T6SS/T6SS_core.hmm"
         args.accessory = T6SS_accessory#"/home/djwilliams/github/hamburger/models/T6SS/T6SS_accessory.hmm"
 
@@ -283,6 +287,11 @@ def main():
     output_dir = args.output
     # os.makedirs(output_dir)
 
+    #make output gff folder
+
+    if args.save_gffs == True:
+        os.makedirs("{output_dir}/extracted_gff_regions".format(output_dir = output_dir))
+
 
 ##### steps Required
 
@@ -297,12 +306,21 @@ def main():
 
 
 ##### other outputs :
+    # create the lists for strain stats, gggenes input, and cluster stats
+    total_gggenes_input = []
+    total_strain_stats = []
+    total_cluster_stats = []
 
-    with open(output_dir+"/strain_statistics.csv","w") as output:
-        output.write("strain,number_of_gene_clusters,number_rejected_clusters,number_contig_break_clusters\n")
+    total_strain_stats.append("strain,number_of_gene_clusters,number_rejected_clusters,number_contig_break_clusters")
+    total_gggenes_input.append("operon,number,start,end,gene,strand,direction,strain,CDS_identifier,hamburger_CDS_identifier,prot_seq")
 
-    with open(output_dir+"/gggenes_input.csv","w") as output:
-        output.write("operon,number,start,end,gene,strand,direction,strain,CDS_identifier,hamburger_CDS_identifier\n")
+    # with open(output_dir+"/strain_statistics.csv","w") as output:
+    #     output.write("strain,number_of_gene_clusters,number_rejected_clusters,number_contig_break_clusters\n")
+    #
+    # with open(output_dir+"/gggenes_input.csv","w") as output:
+    #     output.write("operon,number,start,end,gene,strand,direction,strain,CDS_identifier,hamburger_CDS_identifier\n")
+
+
 
 #2 for each gff file make an ouput folder and work in it:
 
@@ -337,13 +355,41 @@ def main():
             \t\t{mandatory_genes}\n\n
             \tAccessory genes:\n
             \t\t{accessory_genes}\n
-            """.format(min_genes=min_genes_num, genes_gap=genes_gap_num, cutoff=args.cutoff, upstream=args.upstream, downstream=args.downstream, mandatory_genes='\n\t\t'.join(mandatory_names), accessory_genes='\n\t\t'.join(accessory_names)))
+            """.format(
+                min_genes=min_genes_num,
+                genes_gap=genes_gap_num,
+                cutoff=args.cutoff,
+                upstream=args.upstream,
+                downstream=args.downstream,
+                mandatory_genes='\n\t\t'.join(mandatory_names),
+                accessory_genes='\n\t\t'.join(accessory_names)
+                )
+            )
 
 
 
-        with open(output_dir+"/cluster_stats.csv", "w") as output:
-            output.write("gene_cluster,strain,contig,start,stop,length,number_of_mandatory_genes,found_number_of_mandatory_genes,percent_of_mandatory_genes_in_query,number_of_accessory_genes,found_number_of_accessory_genes,percent_of_accessory_genes_in_query,{hmm_genes},GC_cluster,GC_genome,GCcluster/GCgenome\n".format(hmm_genes=','.join(mandatory_names+accessory_names)))
+        # with open(output_dir+"/cluster_stats.csv", "w") as output:
+        #     output.write("gene_cluster,strain,contig,start,stop,length,number_of_mandatory_genes,found_number_of_mandatory_genes,percent_of_mandatory_genes_in_query,number_of_accessory_genes,found_number_of_accessory_genes,percent_of_accessory_genes_in_query,{hmm_genes},GC_cluster,GC_genome,GCcluster/GCgenome\n".format(hmm_genes=','.join(mandatory_names+accessory_names)))
 
+        total_cluster_stats.append(','.join(
+            ["gene_cluster",
+            "strain",
+            "contig",
+            "start",
+            "stop",
+            "length",
+            "number_of_mandatory_genes",
+            "found_number_of_mandatory_genes",
+            "percent_of_mandatory_genes_in_query",
+            "number_of_accessory_genes",
+            "found_number_of_accessory_genes",
+            "percent_of_accessory_genes_in_query",
+            "{hmm_genes}".format(hmm_genes=','.join(mandatory_names+accessory_names)),
+            "GC_cluster",
+            "GC_genome",
+            "GCcluster/GCgenome"]
+            )
+        )
 
         # multiprocess
         # result = pool.map(search_single_genome, gff_files)
@@ -352,12 +398,28 @@ def main():
 
         #run differently depending on whether supplying fasta, gff, or both:
 
-        func = partial(search.search_single_genome, args.mandatory,args.accessory,min_genes_num,genes_gap_num,args.upstream,args.downstream,args.cutoff,args.t6ss,args.output,args.keep_files)
+        func = partial(
+            search.search_single_genome,
+            args.mandatory,
+            args.accessory,
+            min_genes_num,
+            genes_gap_num,
+            args.upstream,
+            args.downstream,
+            args.cutoff,
+            args.t6ss,
+            args.output,
+            args.keep_files,
+            args.save_gffs
+        )
 
 
         with Pool(int(args.num_threads)) as pool:
 
-            for _ in tqdm.tqdm(pool.istarmap(func, zip(args.gff,args.fasta)), total=len(args.gff)):
+            for output_lists in tqdm.tqdm(pool.istarmap(func, zip(args.gff,args.fasta)), total=len(args.gff)):
+                total_gggenes_input.extend(output_lists[0])
+                total_strain_stats.extend(output_lists[1])
+                total_cluster_stats.extend(output_lists[2])
                 pass
 
 
@@ -381,8 +443,26 @@ def main():
             """.format(min_genes=min_genes_num, genes_gap=genes_gap_num, cutoff=args.cutoff, upstream=args.upstream, downstream=args.downstream, mandatory_genes='\n\t\t'.join(mandatory_names)))
 
 
-        with open(output_dir+"/cluster_stats.csv", "w") as output:
-            output.write("gene_cluster,strain,contig,start,stop,length,number_of_mandatory_genes,found_number_of_mandatory_genes,percent_of_mandatory_genes_in_query,{hmm_genes},GC_cluster,GC_genome,GCcluster/GCgenome\n".format(hmm_genes=','.join(mandatory_names)))
+        # with open(output_dir+"/cluster_stats.csv", "w") as output:
+        #     output.write("gene_cluster,strain,contig,start,stop,length,number_of_mandatory_genes,found_number_of_mandatory_genes,percent_of_mandatory_genes_in_query,{hmm_genes},GC_cluster,GC_genome,GCcluster/GCgenome\n".format(hmm_genes=','.join(mandatory_names)))
+
+        total_cluster_stats.append(','.join(
+            "gene_cluster",
+            "strain",
+            "contig",
+            "start",
+            "stop",
+            "length",
+            "number_of_mandatory_genes",
+            "found_number_of_mandatory_genes",
+            "percent_of_mandatory_genes_in_query",
+            "{hmm_genes}".format(hmm_genes=','.join(mandatory_names)),
+            "GC_cluster",
+            "GC_genome",
+            "GCcluster/GCgenome"
+            )
+        )
+
 
 
         # multiprocess
@@ -391,12 +471,28 @@ def main():
         print("Running Hamburger - no accessory HMMs given")
 
         #set function
-        func = partial(search.search_single_genome, args.mandatory,args.accessory,min_genes_num,genes_gap_num,args.upstream,args.downstream,args.cutoff,args.t6ss,args.output,args.keep_files)
+        func = partial(
+            search.search_single_genome,
+            args.mandatory,
+            args.accessory,
+            min_genes_num,
+            genes_gap_num,
+            args.upstream,
+            args.downstream,
+            args.cutoff,
+            args.t6ss,
+            args.output,
+            args.keep_files,
+            args.save_gffs
+        )
 
 
         with Pool(int(args.num_threads)) as pool:
 
-            for _ in tqdm.tqdm(pool.istarmap(func, zip(args.gff,args.fasta)), total=len(args.gff)):
+            for output_lists in tqdm.tqdm(pool.istarmap(func, zip(args.gff,args.fasta)), total=len(args.gff)):
+                total_gggenes_input.extend(output_lists[0])
+                total_strain_stats.extend(output_lists[1])
+                total_cluster_stats.extend(output_lists[2])
                 pass
 
 
@@ -410,42 +506,63 @@ def main():
 #10 Now group all of the different statistics files together
 
 
-    ##now go through these and concatenate files to lists to then be concatenated if they exist:
-    statistics_files  = []
-    gggenes_input_files = []
-    cluster_stats_files = []
+    # ##now go through these and concatenate files to lists to then be concatenated if they exist:
+    # statistics_files  = []
+    # gggenes_input_files = []
+    # cluster_stats_files = []
+    #
+    # #strain_names  = [gff_file.split('/')[-1] for gff_file in gff_files]
+    #
+    # for dirpath, dirnames, filenames in os.walk(args.output):
+    #     #check if the directory is in the gff files list
+    #     if "{cut_dirpath}".format(cut_dirpath = dirpath.split('/')[-1]) in strain_names:
+    #         # now established that it's a correct directory , take the strain_statistics file, the gggenes_input file and the cluster_stats files (if they're there)
+    #         if "strain_statistics.csv" in filenames:
+    #             statistics_files.append("{dirpath}/strain_statistics.csv".format(dirpath = dirpath))
+    #         if "gggenes_input.csv" in filenames:
+    #             gggenes_input_files.append("{dirpath}/gggenes_input.csv".format(dirpath = dirpath))
+    #         if "cluster_stats.csv" in filenames:
+    #             cluster_stats_files.append("{dirpath}/cluster_stats.csv".format(dirpath = dirpath))
+    #
+    # #now check that gggenes_input_files and cluster_stats_files lists aren't empty:
+    #
+    # if len(gggenes_input_files) == 0 or len(cluster_stats_files) == 0 :
+    #
+    #     if args.t6ss == True:
+    #         print("No T6SSs found.")
+    #     else:
+    #         print("No gene clusters found.")
+    #
+    #     ## now cat all the strain statistics files:
+    #     os.system("cat {statistics_files} >> {output_dir}/strain_statistics.csv".format(statistics_files = ' '.join(statistics_files), output_dir=output_dir))
+    #
+    #
+    # else:
+    #
+    #     os.system("cat {statistics_files} >> {output_dir}/strain_statistics.csv".format(statistics_files = ' '.join(statistics_files), output_dir=output_dir))
+    #     os.system("cat {gggenes_input_files} >> {output_dir}/gggenes_input.csv".format(gggenes_input_files = ' '.join(gggenes_input_files), output_dir=output_dir))
+    #     os.system("cat {cluster_stats_files} >> {output_dir}/cluster_stats.csv".format(cluster_stats_files = ' '.join(cluster_stats_files), output_dir=output_dir))
 
-    #strain_names  = [gff_file.split('/')[-1] for gff_file in gff_files]
 
-    for dirpath, dirnames, filenames in os.walk(args.output):
-        #check if the directory is in the gff files list
-        if "{cut_dirpath}".format(cut_dirpath = dirpath.split('/')[-1]) in strain_names:
-            # now established that it's a correct directory , take the strain_statistics file, the gggenes_input file and the cluster_stats files (if they're there)
-            if "strain_statistics.csv" in filenames:
-                statistics_files.append("{dirpath}/strain_statistics.csv".format(dirpath = dirpath))
-            if "gggenes_input.csv" in filenames:
-                gggenes_input_files.append("{dirpath}/gggenes_input.csv".format(dirpath = dirpath))
-            if "cluster_stats.csv" in filenames:
-                cluster_stats_files.append("{dirpath}/cluster_stats.csv".format(dirpath = dirpath))
 
-    #now check that gggenes_input_files and cluster_stats_files lists aren't empty:
-
-    if len(gggenes_input_files) == 0 or len(cluster_stats_files) == 0 :
-
+    if len(total_gggenes_input) == 1 or len(total_cluster_stats) == 1:
         if args.t6ss == True:
             print("No T6SSs found.")
         else:
             print("No gene clusters found.")
 
-        ## now cat all the strain statistics files:
-        os.system("cat {statistics_files} >> {output_dir}/strain_statistics.csv".format(statistics_files = ' '.join(statistics_files), output_dir=output_dir))
+    #write files out
+    with open(output_dir+"/strain_statistics.csv","w") as output:
+        for line in total_strain_stats:
+            output.write(line + "\n")
 
+    with open(output_dir+"/gggenes_input.csv","w") as output:
+        for line in total_gggenes_input:
+            output.write(line + "\n")
 
-    else:
-
-        os.system("cat {statistics_files} >> {output_dir}/strain_statistics.csv".format(statistics_files = ' '.join(statistics_files), output_dir=output_dir))
-        os.system("cat {gggenes_input_files} >> {output_dir}/gggenes_input.csv".format(gggenes_input_files = ' '.join(gggenes_input_files), output_dir=output_dir))
-        os.system("cat {cluster_stats_files} >> {output_dir}/cluster_stats.csv".format(cluster_stats_files = ' '.join(cluster_stats_files), output_dir=output_dir))
+    with open(output_dir+"/cluster_stats.csv","w") as output:
+        for line in total_cluster_stats:
+            output.write(line + "\n")
 
 
 #10 - Cleanup:
@@ -474,6 +591,21 @@ def main():
             with open("{output_dir}/{subtype}_itol.txt".format(subtype=stats_header[num],output_dir=output_dir), "w") as output:
                 for l in to_write:
                     output.write(l)
+
+    #filter t6 types if they're there
+
+    if args.t6ss:
+        filter_t6_types.run_filter(
+            hamburger_dir = output_dir,
+            threads = args.num_threads,
+            itol = args.itol,
+            keep_files = args.keep_files
+        )
+
+
+
+
+
 
 
 
