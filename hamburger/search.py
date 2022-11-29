@@ -161,9 +161,23 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
         #with open(output_dir + "/"+strain+"/strain_statistics.csv","a") as output:
             #output.write(
         strain_stats.append("{strain},{clusters},{rejected_clusters},{number_contig_break_clusters_in_strain}".format(strain=strain,clusters = "0",rejected_clusters = "0",number_contig_break_clusters_in_strain = number_contig_break_clusters_in_strain))
-        # output_lists = (gggenes_input,strain_stats,cluster_stats)
-        # return(output_lists)
 
+        #clean up
+
+        os.system("rm -r {output_dir}/{strain}/singlefastas".format(output_dir=output_dir,strain=strain))
+        os.system("rm  {output_dir}/{strain}/contigs.fna".format(output_dir=output_dir,strain=strain))
+        if keep_files is False:
+            clean.clean_up_files("{output_dir}/{strain}".format(output_dir=output_dir,strain=strain), strain)
+            #remove directory
+            shutil.rmtree("{output_dir}/{strain}".format(output_dir=output_dir,strain=strain))
+
+
+        output_lists = (gggenes_input,strain_stats,cluster_stats)
+        return(output_lists)
+
+
+
+    #if there are hits - continue and cluster the results
     filtered_groups = filter.clustering_func(total_hmmer_genes,genes_gap_num,min_genes_num)
 
 #6 - Check that clusters are on the the same contigs
