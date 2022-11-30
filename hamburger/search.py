@@ -32,11 +32,11 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
 
         gff_file = "{strain_dir}/{strain}.gff".format(strain_dir = strain_dir, strain = strain) # set output gff file to be put into the overall output folder for posterity
 
-        #try:
-        run_prodigal.run_prodigal(fasta_file,gff_file) # now run prodigal, add fasta sequence write out as gff
+        try:
+            run_prodigal.run_prodigal(fasta_file,gff_file) # now run prodigal, add fasta sequence write out as gff
 
-        #except:
-        #sys.exit("Problem with running prodigal")
+        except:
+            return("Problem with running prodigal")
 
     # if both gff and fasta file are supplied, then concatenate them together:
     elif gff_file != None and fasta_file != None:
