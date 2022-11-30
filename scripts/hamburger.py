@@ -90,7 +90,7 @@ def parseArgs():
 			    action='store',
                 nargs='+',
                 required=False,
-			    help='Fasta file(s) to search. can be used in combination with --gff or standalone, in which case prodigal will predict CDSs')
+			    help='Fasta file(s) to search. Can be used in combination with --gff or standalone, in which case prodigal will predict CDSs')
         parser.add_argument('-m',
 			    '--min_genes',
 			    action='store',
@@ -179,7 +179,7 @@ def main():
 
 
     if args.version:
-        print("Hamburger version 0.2.0")
+        print("Hamburger version 0.2.1")
         sys.exit()
 
     ## check if hmmsearch is installed:
@@ -499,7 +499,6 @@ def main():
     end = time.time()
 
 
-    print(end-start)
 
 
 
@@ -574,6 +573,7 @@ def main():
 
     if args.itol == True:
     ## now convert the T6SS subtypes info for itol output:
+        print("Creating files to load into ITOL")
         stats_file  = open("{output_dir}/strain_statistics.csv".format(output_dir=output_dir))
         stats_data = stats_file.readlines()
         stats_header = stats_data[0].split(',') # get the different headers required:
@@ -594,7 +594,10 @@ def main():
 
     #filter t6 types if they're there
 
+
+
     if args.t6ss:
+        print("Filtering T6SSs")
         filter_t6_types.run_filter(
             hamburger_dir = output_dir,
             threads = args.num_threads,
@@ -603,9 +606,13 @@ def main():
         )
 
 
+    
 
+    # print("Search complete in {time} seconds".format(
+    #     time = str(end-start)
+    # ))
 
-
+    print("Search complete")
 
 
 
