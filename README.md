@@ -50,6 +50,7 @@ Python libraries:
 ```
 Biopython
 tqdm
+pandas
 ```
 
 R libraries (for T6SS subtyping) - can be installed using the install_R_packages.R script:
@@ -68,10 +69,9 @@ glue
 
 
 ```
-usage: hamburger.py [-h] [-i MANDATORY] [-a ACCESSORY] -g GFF [GFF ...]
-                    [-m MIN_GENES] [-l GENES_GAP] [-u UPSTREAM]
-                    [-d DOWNSTREAM] [-c CUTOFF] [-t] [-n NUM_THREADS] [-k]
-                    [-o OUTPUT] [-q]
+usage: hamburger.py [-h] [-i MANDATORY] [-a ACCESSORY] [-g GFF [GFF ...]] [-f FASTA [FASTA ...]]
+                    [-m MIN_GENES] [-l GENES_GAP] [-u UPSTREAM] [-d DOWNSTREAM] [-c CUTOFF] [-t]
+                    [-n NUM_THREADS] [-k] [-o OUTPUT] [-q] [-w] [-s] [-v]
 
 Extract and plot gene_clusters based on hmm profiles
 --------------------HaMBURGER--------------------
@@ -88,35 +88,35 @@ Extract and plot gene_clusters based on hmm profiles
          \                             /
           `-._______________________.-'
 
-arguments:
+
+optional arguments:
   -h, --help            show this help message and exit
   -i MANDATORY, --mandatory MANDATORY
-                        Mandatory hmm profile input <required> Set flag
+                        Mandatory hmm profile input <required if not using -t flag>
   -a ACCESSORY, --accessory ACCESSORY
                         Accessory hmm profile input
   -g GFF [GFF ...], --gff GFF [GFF ...]
-                        Gff file(s) to search <required> Set flag
+                        Gff file(s) to search. Can be used in combination with --fasta or standalone (if fasta is appended to the end of the gff inbetween a line with ##FASTA)
+  -f FASTA [FASTA ...], --fasta FASTA [FASTA ...]
+                        Fasta file(s) to search. Can be used in combination with --gff or standalone, in which case prodigal will predict CDSs
   -m MIN_GENES, --min_genes MIN_GENES
                         Minimum number of genes in gene cluster, default = 4
   -l GENES_GAP, --genes_gap GENES_GAP
                         Maximum number of genes gap between hits, default = 10
   -u UPSTREAM, --upstream UPSTREAM
-                        Number of nucleotides to include upstream/"right" of
-                        gene cluster, default = 0
+                        Number of nucleotides to include upstream/"right" of gene cluster, default = 0
   -d DOWNSTREAM, --downstream DOWNSTREAM
-                        Number of nucleotides to include downstream/"left" of
-                        gene cluster, default = 0
+                        Number of nucleotides to include downstream/"left" of gene cluster, default = 0
   -c CUTOFF, --cutoff CUTOFF
                         Cutoff HMMER score for each hit, default = 20
-  -t, --t6ss            Automatic searching for T6SSs, uses min_genes = 8,
-                        genes_gap = 12, mandatory hmm profile of all 13 tss
-                        genes
+  -t, --t6ss            Automatic searching for T6SSs, uses min_genes = 8, genes_gap = 12, mandatory hmm profile of all 13 tss genes
   -n NUM_THREADS, --num_threads NUM_THREADS
                         Number of threads to use, default = 1
   -k, --keep_files      Keep all intermediate files produced, default = False
   -o OUTPUT, --output OUTPUT
-                        Output directory, default =Hamburger output. Will not
-                        write over a previously existing output folder!
-  -q, --itol            Create itol output for number of T6SSs and subtypes
-                        per strain
+                        Output directory, default =Hamburger output. Will not write over a previously existing output folder!
+  -q, --itol            Create itol output for number of T6SSs and subtypes per strain
+  -w, --overwrite       Overwrite existing blast database directory
+  -s, --save_gffs       Save output gff files
+  -v, --version         Print version and exit
 ```
