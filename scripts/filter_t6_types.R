@@ -1,13 +1,13 @@
 #!/usr/bin/env Rscript
 
 
-library(ggtree)
-library(ape)
+suppressPackageStartupMessages(library(ggtree))
+suppressPackageStartupMessages(library(ape))
 library(ggplot2)
 library(castor)
 library(gggenes)
-library(dplyr)
-library(RColorBrewer)
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(RColorBrewer))
 
 #### add in colours
 cols <- c("i1" = "#3cb44b",
@@ -77,7 +77,7 @@ i <- 0
 for (x in as.data.frame(table(unlist(t6ss_subtypes$subtype)))$Var1){
   i <- i + 1
   new_list <- c(subset.data.frame(t6ss_subtypes, subtype == x)$T6SS_example)
-  print(x)
+  #print(x)
   groups[[x]] <- new_list
 }
 
@@ -225,68 +225,68 @@ g1 <- ggtree(groups_tree, ladderize = T, right = T, size=1, aes(color=group)) +
   geom_cladelabel(node=clades_colours_names[6,]$node_num, label=clades_colours_names[6,]$name,
                   color=clades_colours_names[6,]$color_hex, offset=0,align = T) +
   geom_rootedge(rootedge = 0.05)
-ggsave("tssBC_tree_with_types.png",dpi = 300)
+suppressMessages(ggsave("tssBC_tree_with_types.png",dpi = 300))
 
 
-###########============== 4 - Draw tssBC tree with coloured gene clusters ===========##############
-
-###draw the tree with the gggenes input
-
-ref_set_genes <- read.csv(paste0(hamburger_base_directory,"/t6ss_reference_set/gggenes_input.csv",sep=""))
-observed_set_genes <- read.csv("gggenes_input.csv")
-## remove all hashes from the operon name:
-observed_set_genes$operon <- gsub("#","_",observed_set_genes$operon)
-
-##rbind these into a single set:
-combined_genes <- rbind(ref_set_genes, observed_set_genes)
-
-# now create a df with all genes in the same orientation and aligned to tssE:
-##### prepare to plot all of these:
-centred_complete_data <- data.frame(matrix(nrow = 0, ncol = 7))
-colnames(centred_complete_data) <- c("operon","number","start","end","gene","strand","direction")
-average_position <- as.integer(mean(subset.data.frame(combined_genes, gene == "TssE")$start)) # get average starting position for "Ketoacyl-synt_C"
-
-
-### add operons:
-for (operon_num in unique(combined_genes$operon)) {
-
-  temp_df <- subset.data.frame(combined_genes, operon == operon_num, select = c("operon","number","start","end","gene","strand","direction"))
-  tssE_direction <- subset.data.frame(temp_df, gene == "TssE")$direction
-  #print(tssE_direction)
-  #
-  if (nrow(subset.data.frame(temp_df, gene == "TssE")) > 0 ) {
-    if (tssE_direction == "-1") {
-      ##### need to reverse the numbers and the directions
-      max_length <- max(temp_df$end)
-      ## minus the length from the start and stop
-      temp_df$start <- max_length - temp_df$start
-      temp_df$end <- max_length - temp_df$end
-      ## change colnames to switch the start and the stop over
-      colnames(temp_df) <- c("operon","number","end","start","gene","strand","direction")
-      ## change direction:
-      temp_df$direction <- temp_df$direction * -1
-    }
-
-    # ##### correct the position of each of these:
-    difference <- average_position + subset.data.frame(temp_df, gene == "TssE")$start
-    temp_df$start <- temp_df$start - difference
-    temp_df$end <- temp_df$end - difference
-
-  }
-  ## concatenate to new df
-  centred_complete_data <- rbind(centred_complete_data ,temp_df)
-}
-
-
-###### plot the operons to the right of the tree:
-max_length <- ((max(centred_complete_data$end) - min(centred_complete_data$start) ) / 2) / 1000
-
-
-facet1 <- facet_plot(g1, panel='Operons',
-           mapping = aes(xmin = start, xmax = end, fill = gene, x=start, forward = direction, y=y),
-           data=centred_complete_data, color = "black", geom=geom_gene_arrow, size = 1,#, 0.0025 * length(unique(centred_complete_data$operon)) , #use this if want to scale the line thickness on the gene arrows according to the number of tips in the tssBC tree
-           arrow_body_height = grid::unit(0.20, "cm"), arrowhead_height = grid::unit(0.25, "cm"), arrowhead_width = grid::unit(0.25,"cm")) +
-  scale_fill_manual(values=c(tree_cols))
-  # geom_treescale(width = 2, offset = -1.2) +
-ggsave("tssBC_tree_with_T6SS_operons.png",dpi = 300, units = c("cm"), width = max_length * 2, height = 0.3 * length(unique(centred_complete_data$operon)), limitsize = F)
-ggsave("tssBC_tree_with_T6SS_operons.pdf",dpi = 300, units = c("cm"), width = max_length * 2, height = 0.3 * length(unique(centred_complete_data$operon)), limitsize = F)
+# ###########============== 4 - Draw tssBC tree with coloured gene clusters ===========##############
+#
+# ###draw the tree with the gggenes input
+#
+# ref_set_genes <- read.csv(paste0(hamburger_base_directory,"/t6ss_reference_set/gggenes_input.csv",sep=""))
+# observed_set_genes <- read.csv("gggenes_input.csv")
+# ## remove all hashes from the operon name:
+# observed_set_genes$operon <- gsub("#","_",observed_set_genes$operon)
+#
+# ##rbind these into a single set:
+# combined_genes <- rbind(ref_set_genes, observed_set_genes)
+#
+# # now create a df with all genes in the same orientation and aligned to tssE:
+# ##### prepare to plot all of these:
+# centred_complete_data <- data.frame(matrix(nrow = 0, ncol = 7))
+# colnames(centred_complete_data) <- c("operon","number","start","end","gene","strand","direction")
+# average_position <- as.integer(mean(subset.data.frame(combined_genes, gene == "TssE")$start)) # get average starting position for "Ketoacyl-synt_C"
+#
+#
+# ### add operons:
+# for (operon_num in unique(combined_genes$operon)) {
+#
+#   temp_df <- subset.data.frame(combined_genes, operon == operon_num, select = c("operon","number","start","end","gene","strand","direction"))
+#   tssE_direction <- subset.data.frame(temp_df, gene == "TssE")$direction
+#   #print(tssE_direction)
+#   #
+#   if (nrow(subset.data.frame(temp_df, gene == "TssE")) > 0 ) {
+#     if (tssE_direction == "-1") {
+#       ##### need to reverse the numbers and the directions
+#       max_length <- max(temp_df$end)
+#       ## minus the length from the start and stop
+#       temp_df$start <- max_length - temp_df$start
+#       temp_df$end <- max_length - temp_df$end
+#       ## change colnames to switch the start and the stop over
+#       colnames(temp_df) <- c("operon","number","end","start","gene","strand","direction")
+#       ## change direction:
+#       temp_df$direction <- temp_df$direction * -1
+#     }
+#
+#     # ##### correct the position of each of these:
+#     difference <- average_position + subset.data.frame(temp_df, gene == "TssE")$start
+#     temp_df$start <- temp_df$start - difference
+#     temp_df$end <- temp_df$end - difference
+#
+#   }
+#   ## concatenate to new df
+#   centred_complete_data <- rbind(centred_complete_data ,temp_df)
+# }
+#
+#
+# ###### plot the operons to the right of the tree:
+# max_length <- ((max(centred_complete_data$end) - min(centred_complete_data$start) ) / 2) / 1000
+#
+#
+# facet1 <- facet_plot(g1, panel='Operons',
+#            mapping = aes(xmin = start, xmax = end, fill = gene, x=start, forward = direction, y=y),
+#            data=centred_complete_data, color = "black", geom=geom_gene_arrow, size = 1,#, 0.0025 * length(unique(centred_complete_data$operon)) , #use this if want to scale the line thickness on the gene arrows according to the number of tips in the tssBC tree
+#            arrow_body_height = grid::unit(0.20, "cm"), arrowhead_height = grid::unit(0.25, "cm"), arrowhead_width = grid::unit(0.25,"cm")) +
+#   scale_fill_manual(values=c(tree_cols))
+#   # geom_treescale(width = 2, offset = -1.2) +
+# ggsave("tssBC_tree_with_T6SS_operons.png",dpi = 300, units = c("cm"), width = max_length * 2, height = 0.3 * length(unique(centred_complete_data$operon)), limitsize = F)
+# ggsave("tssBC_tree_with_T6SS_operons.pdf",dpi = 300, units = c("cm"), width = max_length * 2, height = 0.3 * length(unique(centred_complete_data$operon)), limitsize = F)
