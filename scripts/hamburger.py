@@ -446,7 +446,7 @@ def main():
         # with open(output_dir+"/cluster_stats.csv", "w") as output:
         #     output.write("gene_cluster,strain,contig,start,stop,length,number_of_mandatory_genes,found_number_of_mandatory_genes,percent_of_mandatory_genes_in_query,{hmm_genes},GC_cluster,GC_genome,GCcluster/GCgenome\n".format(hmm_genes=','.join(mandatory_names)))
 
-        total_cluster_stats.append(','.join(
+        total_cluster_stats.append(','.join([
             "gene_cluster",
             "strain",
             "contig",
@@ -460,7 +460,7 @@ def main():
             "GC_cluster",
             "GC_genome",
             "GCcluster/GCgenome"
-            )
+            ])
         )
 
 
