@@ -1,0 +1,72 @@
+strain.name,strain.subtype,operon
+Salmonella enterica subsp. enterica serovar Typhimurium,Salmonella enterica subsp. enterica serovar Typhimurium i3,AJ320483_i3
+Edwardsiella tarda strain PPD130/91,Edwardsiella tarda strain PPD130/91 i4b,AY424360_i4b
+Vibrio alginolyticus strain EPJS T6SS1,Vibrio alginolyticus strain EPJS T6SS1 i1,FJ790776_i1
+Vibrio alginolyticus strain EPJS T6SS2,Vibrio alginolyticus strain EPJS T6SS2 i5,FJ790777_i5
+Salmonella enterica strain GIFU10007,Salmonella enterica strain GIFU10007 i3,JF766712_i3
+Campylobacter jejuni strain 108,Campylobacter jejuni strain 108 i1,JX436460_i1
+Acinetobacter baumannii strain M2,Acinetobacter baumannii strain M2 i4b,KC432605_i4b
+Escherichia coli strain TW-XM,Escherichia coli strain TW-XM i2,KF678349_i2
+Vibrio cholerae O1 biovar El Tor str. N16961,Vibrio cholerae O1 biovar El Tor str. N16961 i1,NC_002506_i1
+Pseudomonas aeruginosa PAO1,Pseudomonas aeruginosa PAO1 i1,NC_002516_i1
+Pseudomonas aeruginosa PAO1,Pseudomonas aeruginosa PAO1 i3,NC_002516_i3
+Pseudomonas aeruginosa PAO1,Pseudomonas aeruginosa PAO1 i4a,NC_002516_i4a
+Bordetella bronchiseptica RB50,Bordetella bronchiseptica RB50 i3,NC_002927_i3
+Pseudomonas putida KT2440,Pseudomonas putida KT2440 i1,NC_002947_2_i1
+Pseudomonas putida KT2440,Pseudomonas putida KT2440 i1,NC_002947_i1
+Pseudomonas putida KT2440,Pseudomonas putida KT2440 i4b,NC_002947_i4b
+Agrobacterium fabrum str. C58,Agrobacterium fabrum str. C58 i5,NC_003063_i5
+Yersinia pestis CO92,Yersinia pestis CO92 i3,NC_003143_i3
+Ralstonia pseudosolanacearum GMI1000 plasmid pGMI1000MP,Ralstonia pseudosolanacearum GMI1000 plasmid pGMI1000MP i4b,NC_003296_i4b
+Pseudomonas protegens Pf-5,Pseudomonas protegens Pf-5 i3,NC_004129_i3
+Escherichia coli CFT073,Escherichia coli CFT073 i2,NC_004431_i2
+Pectobacterium atrosepticum SCRI1043,Pectobacterium atrosepticum SCRI1043 i1,NC_004547_i1
+Pseudomonas syringae pv. tomato str. DC3000,Pseudomonas syringae pv. tomato str. DC3000 i1,NC_004578_i1
+Vibrio parahaemolyticus RIMD 2210633,Vibrio parahaemolyticus RIMD 2210633 i1,NC_004603_i1
+Vibrio parahaemolyticus RIMD 2210633,Vibrio parahaemolyticus RIMD 2210633 i5,NC_004605_i5
+Acinetobacter baylyi ADP1,Acinetobacter baylyi ADP1 i4b,NC_005966_i4b
+Burkholderia mallei ATCC 23344,Burkholderia mallei ATCC 23344 i1,NC_006349_i1
+Burkholderia pseudomallei K96243,Burkholderia pseudomallei K96243 i1,NC_006351_i1
+Pseudomonas syringae pv. syringae B728a,Pseudomonas syringae pv. syringae B728a i4b,NC_007005_i4b
+Burkholderia thailandensis E264,Burkholderia thailandensis E264 i1,NC_007650_i1
+Burkholderia thailandensis E264,Burkholderia thailandensis E264 i4b,NC_007651_i4b
+Myxococcus xanthus DK 1622,Myxococcus xanthus DK 1622 i1,NC_008095_i1
+Rhizobium johnstonii 3841 plasmid pRL12,Rhizobium johnstonii 3841 plasmid pRL12 i5,NC_008378_i5
+Pseudomonas aeruginosa UCBPP-PA14,Pseudomonas aeruginosa UCBPP-PA14 i1,NC_008463_i1
+Pseudomonas aeruginosa UCBPP-PA14,Pseudomonas aeruginosa UCBPP-PA14 i3,NC_008463_i3
+Pseudomonas aeruginosa UCBPP-PA14,Pseudomonas aeruginosa UCBPP-PA14 i4a,NC_008463_i4a
+Aeromonas hydrophila subsp. hydrophila ATCC 7966,Aeromonas hydrophila subsp. hydrophila ATCC 7966 i1,NC_008570_i1
+Azoarcus olearius,Azoarcus olearius i3,NC_008702_i3
+Paracidovorax citrulli AAC00-1,Paracidovorax citrulli AAC00-1 i3,NC_008752_i3
+Acinetobacter baumannii ATCC 17978,Acinetobacter baumannii ATCC 17978 i4b,NC_009085_i4b
+Yersinia pseudotuberculosis IP 31758,Yersinia pseudotuberculosis IP 31758 i3,NC_009708_i3
+Serratia proteamaculans 568,Serratia proteamaculans 568 i2,NC_009832_i2
+Serratia proteamaculans 568,Serratia proteamaculans 568 i3,NC_009832_i3
+Acinetobacter baumannii SDF,Acinetobacter baumannii SDF i4b,NC_010400_i4b
+Yersinia pseudotuberculosis YPIII,Yersinia pseudotuberculosis YPIII i3,NC_010465_i3
+Proteus mirabilis HI4320,Proteus mirabilis HI4320 i1,NC_010554_i1
+Burkholderia cenocepacia J2315,Burkholderia cenocepacia J2315 i4b,NC_011000_i4b
+Salmonella enterica subsp. enterica serovar Dublin str. CT_02021853,Salmonella enterica subsp. enterica serovar Dublin str. CT_02021853 i3,NC_011205_i3
+Salmonella enterica subsp. enterica serovar Gallinarum str. 287/91,Salmonella enterica subsp. enterica serovar Gallinarum str. 287/91 i1,NC_011274_i1
+Klebsiella pneumoniae subsp. pneumoniae NTUH-K2044,Klebsiella pneumoniae subsp. pneumoniae NTUH-K2044 i2,NC_012731_2_i2
+Edwardsiella ictaluri 93-146,Edwardsiella ictaluri 93-146 i4b,NC_012779_i4b
+Edwardsiella piscicida,Edwardsiella piscicida i4b,NC_013508_i4b
+Serratia proteamaculans 568,Serratia proteamaculans 568 i3,NC_013716_i3
+Serratia proteamaculans 568,Serratia proteamaculans 568 i4a,NC_013716_i4a
+Pantoea ananatis LMG 20103,Pantoea ananatis LMG 20103 i2,NC_013956_i2
+Pantoea ananatis LMG 20103,Pantoea ananatis LMG 20103 i3,NC_013956_i3
+Erwinia amylovora CFBP1430,Erwinia amylovora CFBP1430 i2,NC_013961_i2
+Erwinia amylovora CFBP1430,Erwinia amylovora CFBP1430 i3,NC_013961_i3
+Enterobacter cloacae subsp. cloacae ATCC 13047,Enterobacter cloacae subsp. cloacae ATCC 13047 i3,NC_014121_i3
+Salmonella enterica subsp. enterica serovar Typhimurium str. SL1344,Salmonella enterica subsp. enterica serovar Typhimurium str. SL1344 i3,NC_016810_i3
+Salmonella enterica subsp. enterica serovar Typhimurium str. 14028S,Salmonella enterica subsp. enterica serovar Typhimurium str. 14028S i3,NC_016856_i3
+Escherichia coli 042,Escherichia coli 042 i2,NC_017626_i2
+Escherichia coli 042,Escherichia coli 042 i4b,NC_017626_i4b
+Serratia sp. FGI94,Serratia sp. FGI94 i2,NC_020064_i2
+Serratia sp. FGI94,Serratia sp. FGI94 i3,NC_020064_i3
+Serratia marcescens WW4,Serratia marcescens WW4 i3,NC_020211_2_i3
+Serratia marcescens WW4,Serratia marcescens WW4 i3,NC_020211_i3
+Proteus mirabilis BB2000,Proteus mirabilis BB2000 i1,NC_022000_i1
+Vibrio cholerae V52 gcontig_1103206898976,Vibrio cholerae V52 gcontig_1103206898976 i1,NZ_AAKJ02000013_i1
+Serratia marcescens Db11,Serratia marcescens Db11 i3,GCA_000513215.1_DB11_genomic
+Serratia marcescens SM39,Serratia marcescens SM39 i3,SM39
