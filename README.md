@@ -25,10 +25,6 @@ An automated search and subtyping of T6SSs can be used as follows:
 ```
 python <hamburger_directory>/scripts/hamburger.py -g *.gff -t  -o <new output directory to write in>
 ```
-Followed by a filtering step
-```
-python  <hamburger_directory>/scripts/post_hamburger_t6SS_search.py -i <output directory used for hamburger search>
-```
 
 Output for loading into itol can be requested with the -q flag
 
