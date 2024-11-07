@@ -195,7 +195,7 @@ def main():
 
 
     if args.version:
-        print("Hamburger version 0.2.1")
+        print("Hamburger version 0.2.0")
         sys.exit()
 
     ## check if hmmsearch is installed:
