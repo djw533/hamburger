@@ -174,14 +174,17 @@ def align_sequences(fasta_file, output_file): # cat tssB/tssC sequences in refer
         "-in",
         fasta_file,
         "-out",
-        output_file,
-        "-quiet"
+        output_file#,
+        #"-quiet"
         ],
         #shell=True,
         #check=True,
         #stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
+        #stderr=subprocess.DEVNULL
     )
+
+
+
 
 
 def draw_tree(input_alignment, output_tree):
@@ -191,7 +194,7 @@ def draw_tree(input_alignment, output_tree):
         "fasttree",
         "-out",
         output_tree,
-        "-quiet",
+        #"-quiet",
         "-nopr",
         input_alignment
         ]#,
