@@ -9,6 +9,7 @@ from Bio.Seq import reverse_complement
 def extract_gggenes_info(cluster_annotation, named_genes,list_of_genes,start,stop,strain,output_dir,cluster_num,protein = True):
 
     ###match the gene names back to what they are in the annotation
+    #print(list_of_genes)
 
     old_named_genes = {}
 
@@ -20,8 +21,23 @@ def extract_gggenes_info(cluster_annotation, named_genes,list_of_genes,start,sto
     gg_number = 0
     gggenes_output = []
 
+
+
     for line in cluster_annotation:
+
+        #check if the start and stop of the feature are integers
+        try:
+            int(line.split("\t")[3])
+        except:
+            continue
+        try:
+            int(line.split("\t")[4])
+        except:
+            continue
+
+
         if line.split("\t")[2] == "CDS":
+
 
             ## update counter:
             gg_number += 1
@@ -41,10 +57,12 @@ def extract_gggenes_info(cluster_annotation, named_genes,list_of_genes,start,sto
 
             #id = line.split("\t")[8].split(';')[0].split("ID=")[1]
             ## now get the new name assigned by hamburger:
+
             for new_name, old_name in list_of_genes.items():    # for name, age in dictionary.iteritems():  (for Python 2.x)
                 if old_name == id:
                     hamburger_assigned_id = new_name
                     continue
+
 
             if id in old_named_genes:
                 model_name = old_named_genes[id] # assigning the model name - if it's there;
@@ -104,9 +122,10 @@ def extract_a2b(start_gene, stop_gene, annotation, strain, cluster_num, upstream
     """ Take sequence and annotation from gff3 files between genomic point A and B, given both base indices
     Orientation should be either 'same', 'forward', or 'reverse' """
 
-    #print(start_gene)
-    #print(stop_gene)
-
+    #
+    # print(start_gene)
+    # print(stop_gene)
+    # print(orientation)
 
     #check the contig size is long enough:
     record = SeqIO.read("{output_dir}/{strain}/singlefastas/{contig}.fna".format(output_dir = output_dir, strain = strain, contig = contig), "fasta")
@@ -126,16 +145,37 @@ def extract_a2b(start_gene, stop_gene, annotation, strain, cluster_num, upstream
         for gff_line in annotation:
             if gff_line.startswith('#'):
                 continue # ignore the hashed lines
+            if gff_line.split("\t")[2] != "CDS":
+                continue
 
-            id = gff_line.split("\t")[8].split(";")[0].split("=")[1]
 
+            #check if the start and stop of the feature are integers
+            try:
+                int(gff_line.split("\t")[3])
+            except:
+                continue
+            try:
+                int(gff_line.split("\t")[4])
+            except:
+                continue
+
+
+            #check whether locus tag is in the description
+            if "ID" not in gff_line.split("\t")[8]:
+                return("No IDs")
+
+
+            id = (gff_line.split("\t")[8].split("ID")[1].split("=")[1]+";").split(";")[0]
             if id == start_gene:
-                feature_start = int(gff_line.split('\t')[3])
+                if gff_line.split('\t')[3] == "<1":
+                    feature_start = 1
+                else:
+                    feature_start = int(gff_line.split('\t')[3])
                 feature_stop = int(gff_line.split('\t')[4])
                 start_index = min(feature_start, feature_stop)
                 stop_index = max(feature_start, feature_stop)
                 start_got = True
-                stop_got == True
+                stop_got = True
 
 
     else:
@@ -143,11 +183,35 @@ def extract_a2b(start_gene, stop_gene, annotation, strain, cluster_num, upstream
         for gff_line in annotation:
             if gff_line.startswith('#'):
                 continue
+            if gff_line.split("\t")[2] != "CDS":
+                continue
 
-            id = gff_line.split("\t")[8].split(";")[0].split("=")[1]
+
+
+            #check if the start and stop of the feature are integers
+            try:
+                int(gff_line.split("\t")[3])
+            except:
+                continue
+
+            try:
+                int(gff_line.split("\t")[4])
+            except:
+                continue
+
+
+            #check whether locus tag is in the description
+            if "ID" not in gff_line.split("\t")[8]:
+                return("No IDs")
+
+
+            id = gff_line.split("\t")[8].split("ID=")[1].split(";")[0]
 
             if id == start_gene:
-                feature_start = int(gff_line.split('\t')[3])
+                if gff_line.split('\t')[3] == "<1":
+                    feature_start = 1
+                else:
+                    feature_start = int(gff_line.split('\t')[3])
                 feature_stop = int(gff_line.split('\t')[4])
                 if orientation == "forward":
                     start_index = min(feature_start, feature_stop)
@@ -156,7 +220,10 @@ def extract_a2b(start_gene, stop_gene, annotation, strain, cluster_num, upstream
                 start_got = True
 
             elif id == stop_gene:
-                feature_start = int(gff_line.split('\t')[3])
+                if gff_line.split('\t')[3] == "<1":
+                    feature_start = 1
+                else:
+                    feature_start = int(gff_line.split('\t')[3])
                 feature_stop = int(gff_line.split('\t')[4])
                 stop_index = min(feature_start, feature_stop)
                 if orientation == "forward":
@@ -168,7 +235,6 @@ def extract_a2b(start_gene, stop_gene, annotation, strain, cluster_num, upstream
 
             elif stop_got == True and start_got == True:
                 continue
-
 
     #print 'Checking to see if hit is on the positive or negative strand: -----'
     ### N.B this should always be positive - this is a bit that has been taken over from a previous script that equated blast hits (which had been reversed by blast)
@@ -220,6 +286,19 @@ def extract_a2b(start_gene, stop_gene, annotation, strain, cluster_num, upstream
             feature_start = gff_line.split('\t')[3]
             feature_stop = gff_line.split('\t')[4]
 
+
+        #check if the start and stop of the feature are integers
+        try:
+            int(feature_start)
+        except:
+            continue
+
+        try:
+            int(feature_stop)
+        except:
+            continue
+
+
         if int(feature_start) >= start and int(feature_stop) <= stop and contig in gff_line:
             new_list = gff_line.split("\t")[0:3] + gff_line.split("\t")[5:8]
             new_list.append(" ".join(gff_line.strip().split("\t")[8:]))
@@ -238,7 +317,9 @@ def extract_a2b(start_gene, stop_gene, annotation, strain, cluster_num, upstream
 
             with open("{output_dir}/{strain}/{strain}_cluster_{cluster_num}.gff".format(output_dir = output_dir, strain = strain, cluster_num = cluster_num), "a") as output:
                 output.write(linegff3)
-                cluster_annotation.append(linegff3.strip("\n") + "\t" + prot_seq + "\n") ### append only the cluster annotation for later gggenes input csv creation
+                #only add protein sequence if it's a CDS
+                if gff_line.split('\t')[2] == "CDS":
+                    cluster_annotation.append(linegff3.strip("\n") + "\t" + prot_seq + "\n") ### append only the cluster annotation for later gggenes input csv creation
                 output.write("\n") ####### have removed the newline character "\n"
 
         else:
