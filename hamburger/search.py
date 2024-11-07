@@ -21,6 +21,7 @@ hmmsearch='hmmsearch'
 
 def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_gap_num,upstream,downstream,cutoff,t6ss,output_dir,keep_files,keep_gffs,gff_file,fasta_file):
 
+    #print(gff_file)
 
     # # if no gff file supplied then run prodigal and create the gff file
     if gff_file == None and fasta_file != None:
@@ -298,6 +299,11 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
             orientation = "reverse"
 
         extraction_details = extract.extract_a2b(min_gene, max_gene, annotation, strain, str(counter), upstream, downstream, contig, output_dir,orientation)
+
+        #check if extraction details are incorrect
+        if extraction_details == "No locus tags":
+            print("CDSs specifically need locus tags in the description column of the gff. None found in " + gff_file)
+            break
 
 
         GC_cluster = extraction_details[0]
