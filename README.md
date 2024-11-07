@@ -65,9 +65,8 @@ glue
 
 
 ```
-usage: hamburger.py [-h] [-i MANDATORY] [-a ACCESSORY] [-g GFF [GFF ...]] [-f FASTA [FASTA ...]]
-                    [-m MIN_GENES] [-l GENES_GAP] [-u UPSTREAM] [-d DOWNSTREAM] [-c CUTOFF] [-t]
-                    [-n NUM_THREADS] [-k] [-o OUTPUT] [-q] [-w] [-s] [-v]
+usage: hamburger.py [-h] [-i MANDATORY] [-a ACCESSORY] [-g GFF [GFF ...]] [-f FASTA [FASTA ...]] [-m MIN_GENES] [-l GENES_GAP] [-u UPSTREAM] [-d DOWNSTREAM] [-c CUTOFF] [-t]
+                    [-ft] [-n NUM_THREADS] [-k] [-o OUTPUT] [-q] [-w] [-s] [-v]
 
 Extract and plot gene_clusters based on hmm profiles
 --------------------HaMBURGER--------------------
@@ -83,7 +82,6 @@ Extract and plot gene_clusters based on hmm profiles
         \~`-`.__.`-~`._.~`-`~.-~.__.~`-`/
          \                             /
           `-._______________________.-'
-
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -105,14 +103,15 @@ optional arguments:
                         Number of nucleotides to include downstream/"left" of gene cluster, default = 0
   -c CUTOFF, --cutoff CUTOFF
                         Cutoff HMMER score for each hit, default = 20
-  -t, --t6ss            Automatic searching for T6SSs, uses min_genes = 8, genes_gap = 12, mandatory hmm profile of all 13 tss genes
+  -t, --t6ss            Automatic searching for T6SSs, uses min_genes = 11, genes_gap = 12, mandatory hmm profile of all 13 tss genes
+  -ft, --filter_t6ss    Skip to filtering of T6SSs
   -n NUM_THREADS, --num_threads NUM_THREADS
                         Number of threads to use, default = 1
   -k, --keep_files      Keep all intermediate files produced, default = False
   -o OUTPUT, --output OUTPUT
                         Output directory, default =Hamburger output. Will not write over a previously existing output folder!
   -q, --itol            Create itol output for number of T6SSs and subtypes per strain
-  -w, --overwrite       Overwrite existing blast database directory
+  -w, --overwrite       Overwrite existing output folder
   -s, --save_gffs       Save output gff files
   -v, --version         Print version and exit
 ```
