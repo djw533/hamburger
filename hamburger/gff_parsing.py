@@ -38,6 +38,15 @@ def gff2faa(gff_file, fasta_file, strain,output_dir):
             toks = line.strip().split("\t")
             if toks[2] != "CDS":
                 continue
+            #some gffs have had odd symbols - so if the start or stop can't be made into an integer, then continue
+            try:
+                int(toks[3])
+            except:
+                continue
+            try:
+                int(toks[4])
+            except:
+                continue
 
             #parse the details in the info column:
             various_details = toks[8]
@@ -57,7 +66,12 @@ def gff2faa(gff_file, fasta_file, strain,output_dir):
             list_of_names[name] = true_name
             if toks[0] not in contigs:
                 contigs[toks[0]] = []
-            contigs[toks[0]].append({"name": name, "start": int(toks[3])-1, "stop": int(toks[4]), "strand": toks[6]})
+
+            try:
+                contigs[toks[0]].append({"name": name, "start": int(toks[3])-1, "stop": int(toks[4]), "strand": toks[6]})
+            except Exception as e:
+                raise
+
     out.close()
 
     ## read the contigs and save the final fasta file
