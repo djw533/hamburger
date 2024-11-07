@@ -463,7 +463,7 @@ def main():
         #     output.write("gene_cluster,strain,contig,start,stop,length,number_of_mandatory_genes,found_number_of_mandatory_genes,percent_of_mandatory_genes_in_query,{hmm_genes},GC_cluster,GC_genome,GCcluster/GCgenome\n".format(hmm_genes=','.join(mandatory_names)))
 
         total_cluster_stats.append(','.join(
-            "gene_cluster",
+            ["gene_cluster",
             "strain",
             "contig",
             "start",
@@ -475,7 +475,7 @@ def main():
             "{hmm_genes}".format(hmm_genes=','.join(mandatory_names)),
             "GC_cluster",
             "GC_genome",
-            "GCcluster/GCgenome"
+            "GCcluster/GCgenome"]
             )
         )
 
