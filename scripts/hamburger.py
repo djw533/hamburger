@@ -122,7 +122,11 @@ def parseArgs():
         parser.add_argument('-t',
 			    '--t6ss',
 			    action='store_true',
-			    help='Automatic searching for T6SSs, uses min_genes = 8, genes_gap = 12, mandatory hmm profile of all 13 tss genes')
+			    help='Automatic searching for T6SSs, uses min_genes = 11, genes_gap = 12, mandatory hmm profile of all 13 tss genes')
+        parser.add_argument('-ft',
+			    '--filter_t6ss',
+			    action='store_true',
+			    help='Skip to filtering of T6SSs')
         parser.add_argument('-n',
 			    '--num_threads',
 			    action='store',
@@ -150,7 +154,7 @@ def parseArgs():
         parser.add_argument('-w',
 			    '--overwrite',
 			    action='store_true',
-			    help="Overwrite existing blast database directory")
+			    help="Overwrite existing output folder")
         parser.add_argument('-s',
 			    '--save_gffs',
 			    action='store_true',
@@ -178,6 +182,18 @@ def main():
     args = parseArgs()
 
 
+    if args.filter_t6ss:
+        print("Filtering T6SSs")
+        filter_t6_types.run_filter(
+            hamburger_dir = args.output,
+            threads = args.num_threads,
+            itol = args.itol,
+            keep_files = args.keep_files
+        )
+
+        sys.exit()
+
+
     if args.version:
         print("Hamburger version 0.2.1")
         sys.exit()
@@ -192,8 +208,8 @@ def main():
 
     ### if t6ss flag requested then set these using the t6ss default setting
     if args.t6ss == True:
-        min_genes_num = args.min_genes
-        genes_gap_num = args.genes_gap
+        min_genes_num = 11
+        genes_gap_num = 12
         args.mandatory = T6SS_core#"/home/djwilliams/github/hamburger/models/T6SS/T6SS_core.hmm"
         args.accessory = T6SS_accessory#"/home/djwilliams/github/hamburger/models/T6SS/T6SS_accessory.hmm"
 
@@ -606,7 +622,7 @@ def main():
         )
 
 
-    
+
 
     # print("Search complete in {time} seconds".format(
     #     time = str(end-start)
