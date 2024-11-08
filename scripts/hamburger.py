@@ -122,7 +122,7 @@ def parseArgs():
         parser.add_argument('-t',
 			    '--t6ss',
 			    action='store_true',
-			    help='Automatic searching for T6SSs, uses min_genes = 11, genes_gap = 12, mandatory hmm profile of all 13 tss genes')
+			    help='Automatic searching for T6SS loci, uses min_genes = 4, genes_gap = 10, mandatory hmm profile of all 13 tss genes')
         parser.add_argument('-ft',
 			    '--filter_t6ss',
 			    action='store_true',
@@ -208,8 +208,8 @@ def main():
 
     ### if t6ss flag requested then set these using the t6ss default setting
     if args.t6ss == True:
-        min_genes_num = 11
-        genes_gap_num = 12
+        min_genes_num = args.min_genes
+        genes_gap_num = args.genes_gap
         args.mandatory = T6SS_core#"/home/djwilliams/github/hamburger/models/T6SS/T6SS_core.hmm"
         args.accessory = T6SS_accessory#"/home/djwilliams/github/hamburger/models/T6SS/T6SS_accessory.hmm"
 
