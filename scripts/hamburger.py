@@ -122,7 +122,7 @@ def parseArgs():
         parser.add_argument('-t',
 			    '--t6ss',
 			    action='store_true',
-			    help='Automatic searching for T6SS loci, uses min_genes = 4, genes_gap = 10, mandatory hmm profile of all 13 tss genes')
+			    help='Automatic searching for T6SS loci, uses min_genes = 4, genes_gap = 10, mandatory hmm profile of 13 tssA-M genes')
         parser.add_argument('-ft',
 			    '--filter_t6ss',
 			    action='store_true',
