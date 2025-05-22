@@ -1,6 +1,6 @@
 
 from Bio import SeqIO
-from Bio.SeqUtils import GC
+from Bio.SeqUtils import gc_fraction
 
 from Bio.Seq import translate
 from Bio.Seq import reverse_complement
@@ -349,6 +349,6 @@ def extract_a2b(start_gene, stop_gene, annotation, strain, cluster_num, upstream
 
     cluster_nuc_lines = open("{output_dir}/{strain}/temp_gc_string.fna".format(output_dir = output_dir, strain = strain, cluster_num = cluster_num)).readlines()
     cluster_sequence_string = ''.join([x for x in cluster_nuc_lines if not x.startswith('>')]).replace("\n","")
-    GC_cluster=GC(cluster_sequence_string)
+    GC_cluster=gc_fraction(cluster_sequence_string)
 
     return(GC_cluster, gc_start, gc_stop, start, stop, cluster_annotation)

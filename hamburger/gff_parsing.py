@@ -5,7 +5,7 @@ import sys
 from Bio.SeqIO.FastaIO import SimpleFastaParser
 from Bio.Seq import translate
 from Bio.Seq import reverse_complement
-from Bio.SeqUtils import GC
+from Bio.SeqUtils import gc_fraction
 
 
 
@@ -113,7 +113,7 @@ def gff_splitter(gff_file, output_dir):
     #### get GC content of the whole assembly:
 
     whole_genome_string = ''.join([x for x in nuc_lines if not x.startswith('>')]).replace("\n","")
-    GC_genome=GC(whole_genome_string)
+    GC_genome=gc_fraction(whole_genome_string)
 
 
     #write out
