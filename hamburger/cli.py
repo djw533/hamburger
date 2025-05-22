@@ -12,11 +12,12 @@ from os import walk
 hmmsearch='hmmsearch'
 
 # ### need the directory where hamburger is installed:
-hamburger_base_directory = os.path.abspath(__file__).split("/scripts/hamburger.py")[0]
+#hamburger_base_directory = os.path.abspath(__file__).split("/hamburger/cli.py")[0]
+#print(hamburger_base_directory)
 
 # add this folder to the path
 #sys.path.append(hamburger_base_directory)
-sys.path.insert(0,hamburger_base_directory)
+#sys.path.insert(0,hamburger_base_directory)
 
 
 # import hamburger modules
@@ -33,14 +34,23 @@ from multiprocessing import Pool
 import tqdm
 from functools import partial
 
+#find T6SS hmm models
+import importlib.resources as pkg_resources
+from pathlib import Path
 
+def get_t6ss_model(model_name: str) -> Path:
+    """
+    Locate the `.hmm` file shipped with the hamburger package.
+    
+    Example:
+        get_t6ss_model("T6SS_core")  # → Path to models/T6SS/T6SS_core.hmm
+    """
+    # pkg_resources.files("hamburger") points at the package root
+    pkg_root = pkg_resources.files("hamburger")
+    return pkg_root / "models" / "T6SS" / f"{model_name}.hmm"
 
-
-
-### and for the supplied models for standard pipeline & parameters
-T6SS_core = "{hamburger_base_directory}/models/T6SS/T6SS_core.hmm".format(hamburger_base_directory=hamburger_base_directory)
-T6SS_accessory = "{hamburger_base_directory}/models/T6SS/T6SS_accessory.hmm".format(hamburger_base_directory=hamburger_base_directory)
-
+T6SS_core      = get_t6ss_model("T6SS_core")
+T6SS_accessory = get_t6ss_model("T6SS_accessory")
 
 ###### parse arguments
 
@@ -195,7 +205,7 @@ def main():
 
 
     if args.version:
-        print("Hamburger version 0.2.0")
+        print("Hamburger version 0.2.1")
         sys.exit()
 
     ## check if hmmsearch is installed:
