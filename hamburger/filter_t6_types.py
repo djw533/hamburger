@@ -1,7 +1,5 @@
 
 
-
-
 from hamburger import tool_check
 from hamburger import istarmap
 
@@ -17,8 +15,20 @@ from multiprocessing import Pool
 import tqdm
 from functools import partial
 
+#import Rscripts
+from pathlib import Path
+import importlib.resources as pkg_resources
 
-hamburger_base_directory = os.path.abspath(__file__).split("/hamburger/filter_t6_types.py")[0]
+def resource_path(*parts: str) -> Path:
+    """
+    Return a Path inside the installed hamburger package.
+    e.g. resource_path("r_scripts", "check_R_dependencies.R")
+    """
+    return pkg_resources.files("hamburger").joinpath(*parts)
+
+
+
+#hamburger_base_directory = os.path.abspath(__file__).split("/hamburger/filter_t6_types.py")[0]
 
 
 def get_tssB_tssC(hamburger_dir):
@@ -160,28 +170,71 @@ def concatenate_alignments(aln_1, aln_2, concatenated_output_aln): # must have t
 
 def cat_files(file1, file2, output):
 
-    os.system("cat " + file1 + " " + file2 + " > " + output)
+    os.system("cat " + str(file1) + " " + str(file2) + " > " + output)
+
+
+def get_muscle_version() -> str:
+    """
+    Run `muscle -version` (or `--version`) and return the version string.
+    """
+    for flag in ("-version", "--version"):
+        try:
+            # Capture both stdout/stderr since some versions print to stderr
+            completed = subprocess.run(
+                ["muscle", flag],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            output = completed.stdout or completed.stderr
+            # The first line usually contains the version
+            return output.strip().splitlines()[0].split()[1].strip("v").split(".")[0]
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            continue
+    raise RuntimeError("Could not invoke 'muscle' to get version; is it installed and on your PATH?")
 
 
 def align_sequences(fasta_file, output_file): # cat tssB/tssC sequences in reference and those found by hamburger
 
+    #check version of muscle:
+
+    muscle_vers = get_muscle_version()
 
     #os.system("muscle -in {output_dir}/all_observed_{gene_name}.faa -out {output_dir}/all_observed_{gene_name}_aligned.fasta".format(output_dir=args.input_dir, gene_name=gene_name))
 
-    subprocess.run(
-        args = [
-        "muscle",
-        "-in",
-        fasta_file,
-        "-out",
-        output_file#,
-        #"-quiet"
-        ],
-        #shell=True,
-        #check=True,
-        #stdout=subprocess.DEVNULL,
-        #stderr=subprocess.DEVNULL
-    )
+    if muscle_vers == "3":
+
+        subprocess.run(
+            args = [
+            "muscle",
+            "-in",
+            fasta_file,
+            "-out",
+            output_file#,
+            #"-quiet"
+            ],
+            #shell=True,
+            #check=True,
+            #stdout=subprocess.DEVNULL,
+            #stderr=subprocess.DEVNULL
+        )
+
+    if muscle_vers == "5":
+
+        subprocess.run(
+            args = [
+            "muscle",
+            "-align",
+            fasta_file,
+            "-output",
+            output_file#,
+            #"-quiet"
+            ],
+            #shell=True,
+            #check=True,
+            #stdout=subprocess.DEVNULL,
+            #stderr=subprocess.DEVNULL
+        )
 
 
 
@@ -225,8 +278,14 @@ def run_filter(hamburger_dir,threads = 2, itol = False, keep_files = False):
     elif tool_check.is_tool("FastTree") == True:
         tree_software = "FastTree"
 
-    ##check that the R dependencies are here:
-    os.system("Rscript {hamburger_base_directory}/scripts/check_R_dependencies.R {hamburger_base_directory}".format(hamburger_base_directory=hamburger_base_directory))
+    # get the Path to the script inside the installed package
+    check_script = resource_path("r_scripts", 'check_R_dependencies.R')
+
+    # call it, passing base_dir as the first and only argument
+    subprocess.run(
+        ["Rscript", str(check_script)],
+        check=True
+    )
 
     ## check the dependencies_check
     dependencies_check = open("dependencies_check.csv")
@@ -275,7 +334,7 @@ def run_filter(hamburger_dir,threads = 2, itol = False, keep_files = False):
     #align them - for tssB
     cat_files(
         sequence_files[0],
-        "{d}/t6ss_reference_set/tssB.fasta".format(d = hamburger_base_directory),
+        resource_path("t6ss_reference_set", "tssB.fasta"),
         "{output_dir}/all_tssB.fasta".format(output_dir = hamburger_dir)
     )
     align_sequences(
@@ -286,7 +345,7 @@ def run_filter(hamburger_dir,threads = 2, itol = False, keep_files = False):
     #and for tssC
     cat_files(
         sequence_files[1],
-        "{d}/t6ss_reference_set/tssC.fasta".format(d = hamburger_base_directory),
+        resource_path("t6ss_reference_set", "tssC.fasta"),
         "{output_dir}/all_tssC.fasta".format(output_dir = hamburger_dir)
     )
     align_sequences(
@@ -311,7 +370,16 @@ def run_filter(hamburger_dir,threads = 2, itol = False, keep_files = False):
     #run the Rscript
     os.chdir(hamburger_dir)
     print("Filtering T6SS subtypes according to the TssBC phylogeny")
-    os.system("Rscript {hamburger_base_directory}/scripts/filter_t6_types.R {hamburger_base_directory}".format(hamburger_base_directory=hamburger_base_directory))
+
+    filter_script = resource_path("r_scripts", "filter_t6_types.R")
+    # If filter_t6_types needs extra args (e.g. node_to_root), append them here
+    subprocess.run(
+    ["Rscript", str(filter_script), pkg_resources.files("hamburger")],
+    check=True
+    )
+
+
+    #os.system("Rscript {hamburger_base_directory}/scripts/filter_t6_types.R {hamburger_base_directory}".format(hamburger_base_directory=hamburger_base_directory))
 
 
     if itol == True:
