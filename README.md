@@ -10,20 +10,25 @@ A tool to extract and analyse contiguous sets of genes in bacterial genomes, giv
 
 Hamburger uses sets of concatenated HMMs to search for sets of genes co-localised in a genome, using gff3 files as input. Input gff3 files need both the annotation, and fasta sequence (preceded by ##FASTA in the file, as produced by prokka)
 
-Hamburger can be used as follows - where < > denotes user specific addresses/input:
+It is recommended to install hamburger in a fresh conda environment:
 
-Firstly cloning the git repository using git clone (into desired local directory)
 ```
+conda create -n hamburger python=3.13 hmmer=3 muscle fasttree pip
+conda activate hamburger
 git clone https://www.github.com/djw533/hamburger
+cd hamburger
+pip install .
+Rscript hamburger/r_scripts/install_R_packages.R
 ```
 
-Then running hamburger to search using a set of HMMs concatenated into a single file
+To run a search and subsequent subtyping of T6SSs can be used as follows:
 ```
-python <hamburger_directory>/scripts/hamburger.py -g *.gff -i <concatenated set of hmms.hmm> -o <new output directory to write in> -m <minimum number of genes needed to report gene cluster> -l <max permitted gap of non-model genes between genes of interest>
+hamburger -g *.gff -t  -o <output_dir>
 ```
-An automated search and subtyping of T6SSs can be used as follows:
+
+To run a search using a set of user-defined HMMs concatenated into a single file
 ```
-python <hamburger_directory>/scripts/hamburger.py -g *.gff -t  -o <new output directory to write in>
+hamburger -g *.gff -i <concatenated set of hmms.hmm> -o <new output directory to write in> -m <minimum number of genes needed to report gene cluster> -l <max permitted gap of non-model genes between genes of interest>
 ```
 
 Output for loading into itol can be requested with the -q flag
@@ -49,7 +54,7 @@ tqdm
 pandas
 ```
 
-R libraries (for T6SS subtyping) - can be installed using the install_R_packages.R script:
+R libraries (for T6SS subtyping) - can be installed using the install_R_packages.R script if not installing from bioconda:
 ```
 ggplot2
 dplyr
