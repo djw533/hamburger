@@ -9,11 +9,12 @@ setup(
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
     url='https://github.com/djw533/hamburger',
-    packages=find_packages(),
+    packages=['hamburger', 'hamburger.models.T6SS', 'hamburger.r_scripts', 'hamburger.t6ss_reference_set',
+              'hamburger.models.individual', 'hamburger.models.full', 'hamburger.t6ss_reference_set.with_bacteriodetes'],
     include_package_data=True,
     package_data={
         # include everything under hamburger/models
-        'hamburger': ['models/*/*.hmm','r_scripts/*.R','t6ss_reference_set/*']
+        'hamburger': ['models/T6SS/*.hmm','r_scripts/*.R','t6ss_reference_set/*']
     },
     install_requires=[
         'biopython>1.80',
