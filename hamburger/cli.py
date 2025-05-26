@@ -94,7 +94,7 @@ def parseArgs():
 			    action='store',
                 nargs='+',
                 required=False,
-			    help='Gff file(s) to search. Can be used in combination with --fasta or standalone (if fasta is appended to the end of the gff inbetween a line with ##FASTA)')
+			    help='Gff file(s) to search. gff and gff3 files supported. Can be used in combination with --fasta or standalone (if fasta is appended to the end of the gff inbetween the line "##FASTA")')
         parser.add_argument('-f',
 			    '--fasta',
 			    action='store',
@@ -252,15 +252,15 @@ def main():
 
 
         for gff, fasta in zip(args.gff,args.fasta):
-            if gff.endswith(".gff") == False or fasta.endswith(".fasta") == False:
-                sys.exit("Please make sure all gff and fasta files end with .gff and .fasta")
-            if gff.split('/')[-1].replace(".gff","") != fasta.split('/')[-1].replace(".fasta",""):
+            if not (gff.endswith(".gff") or gff.endswith(".gff3")) or not fasta.endswith(".fasta"):
+                sys.exit("Please make sure all gff files end with .gff or .gff3 and fasta files end with .fasta")
+            if gff.split('/')[-1].rsplit('.', 1)[0] != fasta.split('/')[-1].replace(".fasta",""):
                 sys.exit("Please make sure the prefixes for the gff and fasta files are the same")
 
             #now concatenate:
             # gff_parsing.concat_gff_and_fasta(fasta,gff,"temp_input_gffs/{gff_file}".format(gff_file = gff.split('/')[-1]))
 
-        strain_names = [filename.split('/')[-1].replace(".gff","") for filename in args.gff] # set strain names to iterate over
+        strain_names = [filename.split('/')[-1].rsplit('.', 1)[0] for filename in args.gff] # set strain names to iterate over
 
 
         #except:
@@ -288,11 +288,11 @@ def main():
     if args.gff is not None and args.fasta is None:
         try:
             for gff in args.gff:
-                if gff.endswith(".gff") == False:
-                    sys.exit("Please make sure all gff files end with .gff")
+                  if not (gff.endswith(".gff") or gff.endswith(".gff3")):
+                    sys.exit("Please make sure all gff files end with .gff or .gff3")
 
             args.fasta = [None] * len(args.gff)
-            strain_names = [filename.split('/')[-1].replace(".gff","") for filename in args.gff] # set strain names to iterate over
+            strain_names = [filename.split('/')[-1].rsplit('.', 1)[0] for filename in args.gff] # set strain names to iterate over
 
         except:
             sys.exit("Something was wrong when inputting fasta and gff entry. Exiting.")
