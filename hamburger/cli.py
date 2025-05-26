@@ -5,7 +5,7 @@ import os.path
 import sys
 import time
 from os import walk
-
+import traceback
 
 ###### modify the path/name for hmmsearch below:
 
