@@ -1,0 +1,5 @@
+include README.md
+
+recursive-include hamburger/models *.hmm
+recursive-include hamburger/r_scripts *.R
+recursive-include hamburger/t6ss_reference_set *
