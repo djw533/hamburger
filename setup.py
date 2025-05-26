@@ -9,7 +9,13 @@ setup(
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
     url='https://github.com/djw533/hamburger',
-    packages=find_packages(),
+    packages=find_packages(
+        #exclude these as packages - but import the data within these directories below
+        exclude=["hamburger.models.T6SS",
+                 "hamburger.models.full",
+                 "hamburger.models.individual",
+                 "hamburger.r_scripts",
+                 "hamburger.t6ss_reference_set"]),    
     include_package_data=True,
     package_data={
         # include everything under hamburger/models
