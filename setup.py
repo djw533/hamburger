@@ -13,7 +13,7 @@ setup(
     include_package_data=True,
     package_data={
         # include everything under hamburger/models
-        'hamburger': ['models/**/*.hmm','r_scripts/*.R','t6ss_reference_set/*']
+        'hamburger': ['models/*/*.hmm','r_scripts/*.R','t6ss_reference_set/*']
     },
     install_requires=[
         'biopython>1.80',
