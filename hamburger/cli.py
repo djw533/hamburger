@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from email import parser
 import os
 import os.path
 import sys
@@ -95,12 +96,32 @@ def parseArgs():
                 nargs='+',
                 required=False,
 			    help='Gff file(s) to search. gff and gff3 files supported. Can be used in combination with --fasta or standalone (if fasta is appended to the end of the gff inbetween the line "##FASTA")')
+        parser.add_argument('-gd',
+                '--gffdir',
+                action='store',
+                required=False,
+                help='Directory with gff file(s) to search.')
+        parser.add_argument('-gf',
+                '--gfffiles',
+                action='store',
+                required=False,
+                help='Text file containing paths to GFF files (one per line)')
         parser.add_argument('-f',
 			    '--fasta',
 			    action='store',
                 nargs='+',
                 required=False,
 			    help='Fasta file(s) to search. Can be used in combination with --gff or standalone, in which case prodigal will predict CDSs')
+        parser.add_argument('-fd',
+                '--fastadir',
+                action='store',
+                required=False,
+                help='Directory with fasta file(s) to search.')
+        parser.add_argument('-ff',
+                '--fastafiles',
+                action='store',
+                required=False,
+                help='Text file containing paths to FASTA files (one per line)')
         parser.add_argument('-m',
 			    '--min_genes',
 			    action='store',
@@ -240,65 +261,102 @@ def main():
         if args.accessory is not None: # if accessory models were given change variable name
             accessory_models = args.accessory
 
+    # check to see whether gff or gffdir, fasta, or gff and fasta input used:
 
-    # check to see whether gff, fasta, or gff and fasta input used:
-
-
-    if args.gff is not None and args.fasta is not None:
-        #try:
-        #check lengths of the list and the file extension
-        if len(args.gff) != len(args.fasta):
-            sys.exit("If using both gff and fasta files, please provide equal number of each")
-
-
-        for gff, fasta in zip(args.gff,args.fasta):
-            if not (gff.endswith(".gff") or gff.endswith(".gff3")) or not fasta.endswith(".fasta"):
-                sys.exit("Please make sure all gff files end with .gff or .gff3 and fasta files end with .fasta")
-            if gff.split('/')[-1].rsplit('.', 1)[0] != fasta.split('/')[-1].replace(".fasta",""):
-                sys.exit("Please make sure the prefixes for the gff and fasta files are the same")
-
-            #now concatenate:
-            # gff_parsing.concat_gff_and_fasta(fasta,gff,"temp_input_gffs/{gff_file}".format(gff_file = gff.split('/')[-1]))
-
-        strain_names = [filename.split('/')[-1].rsplit('.', 1)[0] for filename in args.gff] # set strain names to iterate over
-
-
-        #except:
-            #sys.exit("Something was wrong when inputting fasta and gff entry. Exiting.")
-
-
-    if args.gff is None and args.fasta is not None:
-        try:
-
-            if tool_check.is_tool("prodigal") == False:
-                print("Please install prodigal before running hamburger if only using fasta input")
-                sys.exit()
-
-            for fasta in args.fasta:
-                if fasta.endswith(".fasta") == False:
-                    sys.exit("Please make sure all fasta files end with .fasta")
-
-            args.gff = [None] * len(args.fasta)
-            strain_names = [filename.split('/')[-1].replace(".fasta","") for filename in args.fasta] # set strain names to iterate over
-
-        except:
-            sys.exit("Something was wrong when inputting fasta and gff entry. Exiting.")
-
-
-    if args.gff is not None and args.fasta is None:
-        try:
-            for gff in args.gff:
-                  if not (gff.endswith(".gff") or gff.endswith(".gff3")):
-                    sys.exit("Please make sure all gff files end with .gff or .gff3")
-
-            args.fasta = [None] * len(args.gff)
-            strain_names = [filename.split('/')[-1].rsplit('.', 1)[0] for filename in args.gff] # set strain names to iterate over
-
-        except:
-            sys.exit("Something was wrong when inputting fasta and gff entry. Exiting.")
-
-
-    if args.gff is None and args.fasta is None:
+    # Helper function to collect files from directory
+    def collect_files_from_dir(directory, extensions):
+        """Collect files with given extensions from a directory"""
+        files = []
+        if directory and os.path.isdir(directory):
+            for filename in os.listdir(directory):
+                if any(filename.endswith(ext) for ext in extensions):
+                    files.append(os.path.join(directory, filename))
+        return sorted(files)
+    
+    # Helper function to read file list from a file
+    def read_file_list(filepath):
+        """Read list of file paths from a text file (one path per line)"""
+        files = []
+        if filepath and os.path.isfile(filepath):
+            with open(filepath, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#'):  # Skip empty lines and comments
+                        if os.path.isfile(line):
+                            files.append(line)
+                        else:
+                            print(f"Warning: File not found: {line}")
+        return files
+    
+    # Process GFF input (priority: directory > file list > individual files)
+    gff_list = []
+    if args.gffdir:
+        gff_list = collect_files_from_dir(args.gffdir, ['.gff', '.gff3'])
+        if not gff_list:
+            sys.exit(f"No .gff or .gff3 files found in directory: {args.gffdir}")
+    elif args.gfffiles:
+        gff_list = read_file_list(args.gfffiles)
+        if not gff_list:
+            sys.exit(f"No valid GFF file paths found in: {args.gfffiles}")
+    elif args.gff:
+        gff_list = args.gff
+    
+    # Process FASTA input (priority: directory > file list > individual files)
+    fasta_list = []
+    if args.fastadir:
+        fasta_list = collect_files_from_dir(args.fastadir, ['.fasta', '.fa', '.fna'])
+        if not fasta_list:
+            sys.exit(f"No fasta files found in directory: {args.fastadir}")
+    elif args.fastafiles:
+        fasta_list = read_file_list(args.fastafiles)
+        if not fasta_list:
+            sys.exit(f"No valid FASTA file paths found in: {args.fastafiles}")
+    elif args.fasta:
+        fasta_list = args.fasta
+    
+    # Now handle the three cases: gff+fasta, fasta only, gff only
+    if gff_list and fasta_list:
+        if len(gff_list) != len(fasta_list):
+            sys.exit(f"If using both gff and fasta files, please provide equal number of each. Found {len(gff_list)} GFF files and {len(fasta_list)} FASTA files.")
+        
+        for gff, fasta in zip(gff_list, fasta_list):
+            if not (gff.endswith(".gff") or gff.endswith(".gff3")):
+                sys.exit(f"Please make sure all gff files end with .gff or .gff3: {gff}")
+            if not any(fasta.endswith(ext) for ext in ['.fasta', '.fa', '.fna']):
+                sys.exit(f"Please make sure all fasta files have valid extensions (.fasta, .fa, .fna): {fasta}")
+            
+            gff_prefix = os.path.basename(gff).rsplit('.', 1)[0]
+            fasta_prefix = os.path.basename(fasta).rsplit('.', 1)[0]
+            if gff_prefix != fasta_prefix:
+                sys.exit(f"Prefix mismatch between GFF and FASTA: {gff_prefix} vs {fasta_prefix}")
+        
+        args.gff = gff_list
+        args.fasta = fasta_list
+        strain_names = [os.path.basename(filename).rsplit('.', 1)[0] for filename in gff_list]
+    
+    elif fasta_list and not gff_list:
+        if tool_check.is_tool("prodigal") == False:
+            print("Please install prodigal before running hamburger if only using fasta input")
+            sys.exit()
+        
+        for fasta in fasta_list:
+            if not any(fasta.endswith(ext) for ext in ['.fasta', '.fa', '.fna']):
+                sys.exit(f"Invalid fasta file extension: {fasta}")
+        
+        args.gff = [None] * len(fasta_list)
+        args.fasta = fasta_list
+        strain_names = [os.path.basename(filename).rsplit('.', 1)[0] for filename in fasta_list]
+    
+    elif gff_list and not fasta_list:
+        for gff in gff_list:
+            if not (gff.endswith(".gff") or gff.endswith(".gff3")):
+                sys.exit(f"Please make sure all gff files end with .gff or .gff3: {gff}")
+        
+        args.fasta = [None] * len(gff_list)
+        args.gff = gff_list
+        strain_names = [os.path.basename(filename).rsplit('.', 1)[0] for filename in gff_list]
+    
+    else:
         sys.exit("Please provide either fasta or gff files (or both) as input. Exiting.")
 
 
