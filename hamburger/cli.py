@@ -304,7 +304,7 @@ def main():
     # Process FASTA input (priority: directory > file list > individual files)
     fasta_list = []
     if args.fastadir:
-        fasta_list = collect_files_from_dir(args.fastadir, ['.fasta', '.fa', '.fna'])
+        fasta_list = collect_files_from_dir(args.fastadir, ['.fasta', '.fa', '.fna', ".fasta.gz", ".fa.gz", ".fna.gz"])
         if not fasta_list:
             sys.exit(f"No fasta files found in directory: {args.fastadir}")
     elif args.fastafiles:
@@ -340,7 +340,7 @@ def main():
             sys.exit()
         
         for fasta in fasta_list:
-            if not any(fasta.endswith(ext) for ext in ['.fasta', '.fa', '.fna']):
+            if not any(fasta.endswith(ext) for ext in ['.fasta', '.fa', '.fna', '.fasta.gz', '.fa.gz', '.fna.gz']):
                 sys.exit(f"Invalid fasta file extension: {fasta}")
         
         args.gff = [None] * len(fasta_list)

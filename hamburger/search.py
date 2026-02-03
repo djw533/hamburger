@@ -23,9 +23,27 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
 
     #print(gff_file)
 
+
+    gzipped = False
+
     # # if no gff file supplied then run prodigal and create the gff file
     if gff_file == None and fasta_file != None:
-        strain = fasta_file.split('/')[-1].replace(".fasta","")
+
+        #check if fasta is a fasta or is gzipped:
+        if fasta_file.endswith(".gz"):
+            #unzip file
+            os.system("gunzip {fasta_file}".format(fasta_file = fasta_file))
+            fasta_file = fasta_file.replace(".gz","")
+            gzipped = True
+
+        
+        #get the strain name, checking the extension:
+        if fasta_file.endswith(".fasta"):
+            strain = fasta_file.split('/')[-1].replace(".fasta","")
+        elif fasta_file.endswith(".fa"):
+            strain = fasta_file.split('/')[-1].replace(".fa","")
+        elif fasta_file.endswith(".fna"):
+            strain = fasta_file.split('/')[-1].replace(".fna","")
 
         ### now made directory for this strain:
         strain_dir = "{output_dir}/{strain}".format(output_dir = output_dir, strain = strain)
@@ -468,6 +486,10 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
         clean.clean_up_files("{output_dir}/{strain}".format(output_dir=output_dir,strain=strain), strain)
         #remove directory
         shutil.rmtree("{output_dir}/{strain}".format(output_dir=output_dir,strain=strain))
+
+    if gzipped == True:
+        #rezip fasta file
+        os.system("gzip {fasta_file}".format(fasta_file = fasta_file))
 
 
     #return gggenes, strain stats and cluster stats:
