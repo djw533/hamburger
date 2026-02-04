@@ -23,7 +23,6 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
 
     #print(gff_file)
 
-
     gzipped = False
 
     # # if no gff file supplied then run prodigal and create the gff file
@@ -31,9 +30,11 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
 
         #check if fasta is a fasta or is gzipped:
         if fasta_file.endswith(".gz"):
-            #unzip file
-            os.system("gunzip {fasta_file}".format(fasta_file = fasta_file))
-            fasta_file = fasta_file.replace(".gz","")
+            #create random temporary hidden file name to unzip to: (must be random to avoid issues with multiple runs of hamburger in the same directory)
+            temp_fasta_file = "{dir}/.{rand}.fasta".format(dir = output_dir, rand = os.urandom(8).hex())
+            print("Unzipping gzipped fasta file for processing, and unpacking to temporary file {temp_fasta_file}".format(temp_fasta_file = temp_fasta_file))
+            os.system("gunzip -c {fasta_file} > {temp_fasta_file}".format(fasta_file = fasta_file, temp_fasta_file = temp_fasta_file))
+            fasta_file = temp_fasta_file
             gzipped = True
 
         
@@ -488,8 +489,8 @@ def search_single_genome(mandatory_models,accessory_models,min_genes_num,genes_g
         shutil.rmtree("{output_dir}/{strain}".format(output_dir=output_dir,strain=strain))
 
     if gzipped == True:
-        #rezip fasta file
-        os.system("gzip {fasta_file}".format(fasta_file = fasta_file))
+        #remove the temporary fasta file that was created for the gzipped input
+        os.system("rm {temp_fasta_file}".format(temp_fasta_file = temp_fasta_file))
 
 
     #return gggenes, strain stats and cluster stats:
