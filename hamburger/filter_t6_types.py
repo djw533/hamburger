@@ -200,6 +200,11 @@ def align_sequences(fasta_file, output_file): # cat tssB/tssC sequences in refer
 
     muscle_vers = get_muscle_version()
 
+
+    #count number of sequences in the file:
+    with open(fasta_file) as f:
+        num_seqs = sum(1 for line in f if line.startswith(">"))
+
     #os.system("muscle -in {output_dir}/all_observed_{gene_name}.faa -out {output_dir}/all_observed_{gene_name}_aligned.fasta".format(output_dir=args.input_dir, gene_name=gene_name))
 
     if muscle_vers == "3":
@@ -219,12 +224,21 @@ def align_sequences(fasta_file, output_file): # cat tssB/tssC sequences in refer
             #stderr=subprocess.DEVNULL
         )
 
+
     if muscle_vers == "5":
+
+        if num_seqs > 1000:
+            #using super5
+            
+            aln_method = "-super5"
+        else:
+            aln_method = "-align"
+
 
         subprocess.run(
             args = [
             "muscle",
-            "-align",
+            aln_method,
             fasta_file,
             "-output",
             output_file#,
